@@ -6,7 +6,7 @@ members = ["beam-core", "beam-gtk"]
 version = "1.0.1"
 edition = "2021"
 license = "GPL-3.0-or-later"
-repository = "https://github.com/britors/Beam"
+repository = "https://github.com/lyra-os-linux/beam"
 
 [profile.release]
 lto = true

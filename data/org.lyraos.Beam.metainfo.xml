@@ -50,12 +50,12 @@
   <screenshots>
     <screenshot type="default">
       <caption>Connection list</caption>
-      <image>https://raw.githubusercontent.com/britors/Beam/main/data/screenshots/connections.png</image>
+      <image>https://raw.githubusercontent.com/lyra-os-linux/beam/main/data/screenshots/connections.png</image>
     </screenshot>
   </screenshots>
 
-  <url type="homepage">https://github.com/britors/Beam</url>
-  <url type="bugtracker">https://github.com/britors/Beam/issues</url>
+  <url type="homepage">https://github.com/lyra-os-linux/beam</url>
+  <url type="bugtracker">https://github.com/lyra-os-linux/beam/issues</url>
 
   <content_rating type="oars-1.1"/>
 

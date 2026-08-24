@@ -395,8 +395,8 @@ fn install_window_actions(window: &adw::ApplicationWindow) {
                 .application_icon("org.lyraos.Beam")
                 .developer_name("Lyra OS")
                 .version(env!("CARGO_PKG_VERSION"))
-                .website("https://github.com/britors/Beam")
-                .issue_url("https://github.com/britors/Beam/issues")
+                .website("https://github.com/lyra-os-linux/beam")
+                .issue_url("https://github.com/lyra-os-linux/beam/issues")
                 .license_type(gtk::License::Gpl30)
                 .build();
             dialog.set_developers(&["Rodrigo Brito"]);

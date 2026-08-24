@@ -15,7 +15,7 @@ Release:        0
 Summary:        Cliente RDP do ecossistema Lyra OS
 License:        GPL-3.0-or-later
 Group:          Productivity/Networking/Remote Desktop
-URL:            https://github.com/britors/Beam
+URL:            https://github.com/lyra-os-linux/beam
 Source0:        %{name}-%{version}.tar.gz
 Source1:        vendor.tar.zst
 
