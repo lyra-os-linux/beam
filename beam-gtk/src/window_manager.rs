@@ -169,23 +169,29 @@ pub fn build(app: &adw::Application, runtime: tokio::runtime::Handle) {
                             if let Some(updated) =
                                 profile_dialog::edit(&window, Some(current)).await
                             {
-                                let mut list = profiles.borrow_mut();
-                                let Some(position) = list.iter().position(|p| p.id == updated.id)
-                                else {
-                                    return;
+                                let (previous, remove_old_credential) = {
+                                    let mut list = profiles.borrow_mut();
+                                    let Some(position) =
+                                        list.iter().position(|p| p.id == updated.id)
+                                    else {
+                                        return;
+                                    };
+                                    let previous = list[position].clone();
+                                    let mut saved = list.clone();
+                                    saved[position] = updated;
+                                    if let Err(error) = profile::save_profiles(&saved) {
+                                        tracing::error!(%error, "falha ao salvar edição de perfil");
+                                        show_error(&window, &error.to_string());
+                                        return;
+                                    }
+                                    let remove_old_credential =
+                                        !same_credential(&previous, &saved[position])
+                                            && !saved
+                                                .iter()
+                                                .any(|p| same_credential(p, &previous));
+                                    *list = saved;
+                                    (previous, remove_old_credential)
                                 };
-                                let previous = list[position].clone();
-                                let mut saved = list.clone();
-                                saved[position] = updated;
-                                if let Err(error) = profile::save_profiles(&saved) {
-                                    tracing::error!(%error, "falha ao salvar edição de perfil");
-                                    show_error(&window, &error.to_string());
-                                    return;
-                                }
-                                let remove_old_credential = !same_credential(&previous, &saved[position])
-                                    && !saved.iter().any(|p| same_credential(p, &previous));
-                                *list = saved;
-                                drop(list);
                                 refresh_store(&profiles, &list_store);
                                 if remove_old_credential {
                                     let key = beam_core::secrets::SecretKey {

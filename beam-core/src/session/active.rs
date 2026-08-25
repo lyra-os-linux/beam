@@ -34,6 +34,9 @@ fn to_dirty_rect(region: &ironrdp_pdu::geometry::InclusiveRectangle) -> DirtyRec
     }
 }
 
+// This is the single session orchestration boundary: keeping the independently
+// bounded command/event channels explicit makes backpressure policy reviewable.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn run(
     framed: Framed<ironrdp_tokio::TokioStream<TlsStream<TcpStream>>>,
     connection_result: ConnectionResult,

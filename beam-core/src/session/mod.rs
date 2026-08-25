@@ -164,6 +164,9 @@ pub fn connect(
     )
 }
 
+// SessionController owns these channels separately so lossy pointer traffic
+// cannot starve essential input, cancellation or clipboard state.
+#[allow(clippy::too_many_arguments)]
 async fn run_session(
     profile: ConnectionProfile,
     events: mpsc::Sender<SessionEvent>,
