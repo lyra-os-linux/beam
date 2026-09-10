@@ -19,6 +19,8 @@ use tokio::net::TcpStream;
 use tokio::sync::{mpsc, watch};
 use tracing::{error, warn};
 
+const WRITE_TIMEOUT: Duration = Duration::from_secs(10);
+
 use crate::events::{DisconnectReason, SessionEvent};
 use crate::session::clipboard::ClipboardBackendMsg;
 use crate::session::framebuffer::{DirtyRect, Framebuffer};
@@ -42,7 +44,7 @@ pub(crate) async fn run(
     connection_result: ConnectionResult,
     events: mpsc::Sender<SessionEvent>,
     mut commands: mpsc::Receiver<SessionCommand>,
-    mut essential_commands: mpsc::Receiver<SessionCommand>,
+    mut essential_commands: mpsc::UnboundedReceiver<SessionCommand>,
     mut pointer_position: watch::Receiver<Option<crate::session::InputEvent>>,
     mut clipboard_generation: watch::Receiver<u64>,
     mut cancelled: watch::Receiver<bool>,
@@ -192,7 +194,8 @@ pub(crate) async fn run(
         for output in outputs {
             match output {
                 ActiveStageOutput::ResponseFrame(frame) => {
-                    if writer.write_all(&frame).await.is_err() {
+                    let write = tokio::time::timeout(WRITE_TIMEOUT, writer.write_all(&frame)).await;
+                    if !matches!(write, Ok(Ok(()))) {
                         let _ = events
                             .send(SessionEvent::Disconnected(
                                 DisconnectReason::ConnectionLost(
@@ -236,7 +239,12 @@ pub(crate) async fn run(
                                 return;
                             }
                         };
-                        if written.size().is_some() && writer.write_all(buf.filled()).await.is_err()
+                        if written.size().is_some()
+                            && !matches!(
+                                tokio::time::timeout(WRITE_TIMEOUT, writer.write_all(buf.filled()))
+                                    .await,
+                                Ok(Ok(()))
+                            )
                         {
                             let _ = events
                                 .send(SessionEvent::Disconnected(

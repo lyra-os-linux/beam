@@ -56,7 +56,7 @@ impl SessionEvents {
 #[derive(Clone)]
 pub struct SessionController {
     commands: mpsc::Sender<SessionCommand>,
-    essential_commands: mpsc::Sender<SessionCommand>,
+    essential_commands: mpsc::UnboundedSender<SessionCommand>,
     pointer_position: watch::Sender<Option<InputEvent>>,
     clipboard_generation: watch::Sender<u64>,
     cancelled: watch::Sender<bool>,
@@ -79,7 +79,7 @@ impl SessionController {
         // applies backpressure only when the network has fallen more than 512 transitions behind.
         if self
             .essential_commands
-            .blocking_send(SessionCommand::Input(event))
+            .send(SessionCommand::Input(event))
             .is_err()
         {
             debug!("sessão encerrada antes do envio de entrada discreta");
@@ -89,7 +89,7 @@ impl SessionController {
     pub fn send_ctrl_alt_del(&self) {
         if self
             .essential_commands
-            .blocking_send(SessionCommand::CtrlAltDel)
+            .send(SessionCommand::CtrlAltDel)
             .is_err()
         {
             warn!("sessão encerrada antes do envio de Ctrl+Alt+Del");
@@ -123,7 +123,7 @@ pub fn connect(
 ) -> (SessionController, SessionEvents) {
     let (events_tx, events_rx) = mpsc::channel(64);
     let (commands_tx, commands_rx) = mpsc::channel(256);
-    let (essential_tx, essential_rx) = mpsc::channel(512);
+    let (essential_tx, essential_rx) = mpsc::unbounded_channel();
     let (pointer_tx, pointer_rx) = watch::channel(None);
     let (clipboard_tx, clipboard_rx) = watch::channel(0);
     let (cancel_tx, cancel_rx) = watch::channel(false);
@@ -171,7 +171,7 @@ async fn run_session(
     profile: ConnectionProfile,
     events: mpsc::Sender<SessionEvent>,
     commands: mpsc::Receiver<SessionCommand>,
-    essential_commands: mpsc::Receiver<SessionCommand>,
+    essential_commands: mpsc::UnboundedReceiver<SessionCommand>,
     pointer_position: watch::Receiver<Option<InputEvent>>,
     clipboard_generation: watch::Receiver<u64>,
     framebuffer: Arc<Framebuffer>,
@@ -298,11 +298,11 @@ mod tests {
     fn test_controller() -> (
         SessionController,
         mpsc::Receiver<SessionCommand>,
-        mpsc::Receiver<SessionCommand>,
+        mpsc::UnboundedReceiver<SessionCommand>,
         watch::Receiver<Option<InputEvent>>,
     ) {
         let (commands, commands_rx) = mpsc::channel(2);
-        let (essential, essential_rx) = mpsc::channel(2);
+        let (essential, essential_rx) = mpsc::unbounded_channel();
         let (pointer, pointer_rx) = watch::channel(None);
         let (clipboard_generation, _) = watch::channel(0);
         let (cancelled, _) = watch::channel(false);
@@ -335,7 +335,7 @@ mod tests {
     }
 
     #[test]
-    fn discrete_transitions_use_the_reserved_bounded_queue() {
+    fn discrete_transitions_use_the_nonblocking_essential_queue() {
         let (controller, mut commands, mut essential, _pointer) = test_controller();
         controller.send_input(InputEvent::Key {
             scancode: 30,
