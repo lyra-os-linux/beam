@@ -215,6 +215,7 @@ pub fn open(app: &adw::Application, profile: ConnectionProfile, runtime: tokio::
     let (controller, events) = session::connect(profile.clone(), &runtime);
     display.set_framebuffer(controller.framebuffer().clone());
     let active_controller = Rc::new(RefCell::new(controller.clone()));
+    disconnect_on_close(&window, active_controller.clone());
 
     input_gtk::attach(
         &display,
@@ -308,6 +309,16 @@ pub fn open(app: &adw::Application, profile: ConnectionProfile, runtime: tokio::
     display.grab_focus();
 }
 
+fn disconnect_on_close(
+    window: &adw::ApplicationWindow,
+    controller: Rc<RefCell<SessionController>>,
+) {
+    window.connect_close_request(move |_| {
+        controller.borrow().disconnect();
+        glib::Propagation::Proceed
+    });
+}
+
 fn should_start_fullscreen(profile: &ConnectionProfile) -> bool {
     profile.fullscreen
 }
@@ -386,6 +397,12 @@ fn spawn_event_pump(
 /// verbatim so diagnostics are not damaged.
 fn localized_detail(detail: &str) -> String {
     match detail {
+        "Input queue full; disconnected to avoid losing key releases" => {
+            gettext("Input queue full; disconnected to avoid losing key releases")
+        }
+        "Timed out sending data" => gettext("Timed out sending data"),
+        "Timed out reactivating the session" => gettext("Timed out reactivating the session"),
+        "Session ended unexpectedly" => gettext("Session ended unexpectedly"),
         "falha ao enviar dados" => gettext("Failed to send data"),
         "certificado do servidor recusado pelo usuário" => {
             gettext("Server certificate rejected by the user")

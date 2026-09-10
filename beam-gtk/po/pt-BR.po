@@ -197,3 +197,15 @@ msgstr "Não foi possível salvar as conexões"
 
 msgid "{feature} unavailable: {detail}"
 msgstr "{feature} indisponível: {detail}"
+
+msgid "Input queue full; disconnected to avoid losing key releases"
+msgstr "Fila de entrada cheia; conexão encerrada para evitar perda de liberação de teclas"
+
+msgid "Timed out sending data"
+msgstr "Tempo limite excedido ao enviar dados"
+
+msgid "Timed out reactivating the session"
+msgstr "Tempo limite excedido ao reativar a sessão"
+
+msgid "Session ended unexpectedly"
+msgstr "A sessão terminou inesperadamente"

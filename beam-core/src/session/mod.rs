@@ -11,6 +11,7 @@ mod input;
 
 use std::sync::Arc;
 
+use std::future::Future;
 use tokio::sync::{mpsc, oneshot, watch};
 use tracing::{debug, warn};
 
@@ -41,13 +42,27 @@ pub(crate) enum SessionCommand {
 /// cheap, `Send`-free [`SessionController`].
 pub struct SessionEvents {
     events: mpsc::Receiver<SessionEvent>,
+    finished: Option<oneshot::Receiver<DisconnectReason>>,
 }
 
 impl SessionEvents {
     /// Await the next session event. Returns `None` once the session task has fully exited
     /// (always preceded by a [`SessionEvent::Disconnected`]).
     pub async fn next_event(&mut self) -> Option<SessionEvent> {
-        self.events.recv().await
+        let finished = self.finished.as_mut()?;
+        let reason = tokio::select! {
+            biased;
+            reason = &mut *finished => reason,
+            event = self.events.recv() => {
+                if event.is_some() { return event; }
+                finished.await
+            }
+        };
+        self.finished = None;
+        self.events.close();
+        Some(SessionEvent::Disconnected(reason.unwrap_or_else(|_| {
+            DisconnectReason::ConnectionLost("Session ended unexpectedly".into())
+        })))
     }
 }
 
@@ -56,10 +71,10 @@ impl SessionEvents {
 #[derive(Clone)]
 pub struct SessionController {
     commands: mpsc::Sender<SessionCommand>,
-    essential_commands: mpsc::Sender<SessionCommand>,
+    essential_commands: mpsc::UnboundedSender<SessionCommand>,
     pointer_position: watch::Sender<Option<InputEvent>>,
     clipboard_generation: watch::Sender<u64>,
-    cancelled: watch::Sender<bool>,
+    cancelled: watch::Sender<Option<DisconnectReason>>,
     framebuffer: Arc<Framebuffer>,
     clipboard_bridge: Arc<ClipboardBridge>,
 }
@@ -75,25 +90,31 @@ impl SessionController {
             self.pointer_position.send_replace(Some(event));
             return;
         }
-        // Discrete transitions must remain ordered and must not be discarded. This bounded queue
-        // applies backpressure only when the network has fallen more than 512 transitions behind.
-        if self
-            .essential_commands
-            .blocking_send(SessionCommand::Input(event))
-            .is_err()
-        {
+        self.send_essential(SessionCommand::Input(event));
+    }
+
+    pub fn send_ctrl_alt_del(&self) {
+        self.send_essential(SessionCommand::CtrlAltDel);
+    }
+
+    fn send_essential(&self, command: SessionCommand) {
+        if self.cancelled.borrow().is_some() {
+            return;
+        }
+        if self.essential_commands.send(command).is_err() {
             debug!("sessão encerrada antes do envio de entrada discreta");
         }
     }
 
-    pub fn send_ctrl_alt_del(&self) {
-        if self
-            .essential_commands
-            .blocking_send(SessionCommand::CtrlAltDel)
-            .is_err()
-        {
-            warn!("sessão encerrada antes do envio de Ctrl+Alt+Del");
-        }
+    fn request_stop(&self, reason: DisconnectReason) {
+        self.cancelled.send_if_modified(|current| {
+            if current.is_some() {
+                false
+            } else {
+                *current = Some(reason);
+                true
+            }
+        });
     }
 
     /// Notify the session that the local (GTK) clipboard now holds `text`, offering it to the
@@ -108,7 +129,7 @@ impl SessionController {
     }
 
     pub fn disconnect(&self) {
-        let _ = self.cancelled.send(true);
+        self.request_stop(DisconnectReason::UserInitiated);
         let _ = self.commands.try_send(SessionCommand::Disconnect);
     }
 }
@@ -123,10 +144,11 @@ pub fn connect(
 ) -> (SessionController, SessionEvents) {
     let (events_tx, events_rx) = mpsc::channel(64);
     let (commands_tx, commands_rx) = mpsc::channel(256);
-    let (essential_tx, essential_rx) = mpsc::channel(512);
+    let (essential_tx, essential_rx) = mpsc::unbounded_channel();
     let (pointer_tx, pointer_rx) = watch::channel(None);
     let (clipboard_tx, clipboard_rx) = watch::channel(0);
-    let (cancel_tx, cancel_rx) = watch::channel(false);
+    let (cancel_tx, cancel_rx) = watch::channel(None);
+    let (finished_tx, finished_rx) = oneshot::channel();
     let framebuffer = Arc::new(Framebuffer::new(
         profile.resolution.width,
         profile.resolution.height,
@@ -136,18 +158,20 @@ pub fn connect(
     let task_framebuffer = framebuffer.clone();
     let task_clipboard_bridge = clipboard_bridge.clone();
     runtime.spawn(async move {
-        run_session(
+        let session = run_session(
             profile,
-            events_tx,
+            events_tx.clone(),
             commands_rx,
             essential_rx,
             pointer_rx,
             clipboard_rx,
             task_framebuffer,
             task_clipboard_bridge,
-            cancel_rx,
-        )
-        .await;
+            cancel_rx.clone(),
+        );
+        let reason = supervise(session, &events_tx, cancel_rx).await;
+        // Independent of the bounded UI event queue: teardown never waits for GTK.
+        let _ = finished_tx.send(reason);
     });
 
     (
@@ -160,8 +184,40 @@ pub fn connect(
             framebuffer,
             clipboard_bridge,
         },
-        SessionEvents { events: events_rx },
+        SessionEvents {
+            events: events_rx,
+            finished: Some(finished_rx),
+        },
     )
+}
+
+/// Covers every await in the session, including event delivery, keyring operations,
+/// TLS writes and activation. Cancelling drops the entire transport future; a partial
+/// frame is never retried on the same connection.
+async fn supervise(
+    session: impl Future<Output = DisconnectReason>,
+    events: &mpsc::Sender<SessionEvent>,
+    mut cancelled: watch::Receiver<Option<DisconnectReason>>,
+) -> DisconnectReason {
+    tokio::select! {
+        biased;
+        reason = wait_for_cancel(&mut cancelled) => reason,
+        _ = events.closed() => DisconnectReason::UserInitiated,
+        reason = session => reason,
+    }
+}
+
+pub(super) async fn wait_for_cancel(
+    cancelled: &mut watch::Receiver<Option<DisconnectReason>>,
+) -> DisconnectReason {
+    loop {
+        if let Some(reason) = cancelled.borrow_and_update().clone() {
+            return reason;
+        }
+        if cancelled.changed().await.is_err() {
+            return DisconnectReason::UserInitiated;
+        }
+    }
 }
 
 // SessionController owns these channels separately so lossy pointer traffic
@@ -171,13 +227,13 @@ async fn run_session(
     profile: ConnectionProfile,
     events: mpsc::Sender<SessionEvent>,
     commands: mpsc::Receiver<SessionCommand>,
-    essential_commands: mpsc::Receiver<SessionCommand>,
+    essential_commands: mpsc::UnboundedReceiver<SessionCommand>,
     pointer_position: watch::Receiver<Option<InputEvent>>,
     clipboard_generation: watch::Receiver<u64>,
     framebuffer: Arc<Framebuffer>,
     clipboard_bridge: Arc<ClipboardBridge>,
-    mut cancelled: watch::Receiver<bool>,
-) {
+    mut cancelled: watch::Receiver<Option<DisconnectReason>>,
+) -> DisconnectReason {
     let username = profile.username.clone();
     let key = SecretKey {
         host: profile.normalized_host(),
@@ -187,10 +243,7 @@ async fn run_session(
 
     let lookup = tokio::select! {
         result = secrets::lookup_password(&key) => result,
-        _ = cancelled.changed() => {
-            disconnect_cancelled(&events).await;
-            return;
-        }
+        reason = wait_for_cancel(&mut cancelled) => return reason
     };
     let mut save_after_auth = false;
     let mut credential_from_store = false;
@@ -214,10 +267,7 @@ async fn run_session(
 
             let answer = tokio::select! {
                 answer = rx => answer.ok().flatten(),
-                _ = cancelled.changed() => {
-                    disconnect_cancelled(&events).await;
-                    return;
-                }
+                reason = wait_for_cancel(&mut cancelled) => return reason
             };
             match answer {
                 Some((password, save)) => {
@@ -225,12 +275,7 @@ async fn run_session(
                     password
                 }
                 _ => {
-                    let _ = events
-                        .send(SessionEvent::Disconnected(
-                            DisconnectReason::ConnectionFailed("senha não fornecida".to_owned()),
-                        ))
-                        .await;
-                    return;
+                    return DisconnectReason::ConnectionFailed("senha não fornecida".to_owned());
                 }
             }
         }
@@ -268,7 +313,7 @@ async fn run_session(
                 backend_rx,
                 framebuffer,
             )
-            .await;
+            .await
         }
         Err(e) => {
             if credential_from_store && e.is_authentication_rejected() {
@@ -276,19 +321,9 @@ async fn run_session(
                     warn!(%error, "falha ao invalidar credencial rejeitada");
                 }
             }
-            let _ = events
-                .send(SessionEvent::Disconnected(
-                    DisconnectReason::ConnectionFailed(e.to_string()),
-                ))
-                .await;
+            DisconnectReason::ConnectionFailed(e.to_string())
         }
     }
-}
-
-async fn disconnect_cancelled(events: &mpsc::Sender<SessionEvent>) {
-    let _ = events
-        .send(SessionEvent::Disconnected(DisconnectReason::UserInitiated))
-        .await;
 }
 
 #[cfg(test)]
@@ -298,14 +333,14 @@ mod tests {
     fn test_controller() -> (
         SessionController,
         mpsc::Receiver<SessionCommand>,
-        mpsc::Receiver<SessionCommand>,
+        mpsc::UnboundedReceiver<SessionCommand>,
         watch::Receiver<Option<InputEvent>>,
     ) {
         let (commands, commands_rx) = mpsc::channel(2);
-        let (essential, essential_rx) = mpsc::channel(2);
+        let (essential, essential_rx) = mpsc::unbounded_channel();
         let (pointer, pointer_rx) = watch::channel(None);
         let (clipboard_generation, _) = watch::channel(0);
-        let (cancelled, _) = watch::channel(false);
+        let (cancelled, _) = watch::channel(None);
         (
             SessionController {
                 commands,
