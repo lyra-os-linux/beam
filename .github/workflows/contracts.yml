@@ -17,7 +17,11 @@ jobs:
         with:
           components: rustfmt, clippy
       - name: Install GTK and packaging validators
-        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libadwaita-1-dev gettext appstream-util desktop-file-utils rpm zstd
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev gettext appstream-util desktop-file-utils rpm zstd locales
+          sudo sed -i 's/^# *\(en_US.UTF-8\|pt_BR.UTF-8\|es_ES.UTF-8\|zh_CN.UTF-8\)/\1/' /etc/locale.gen
+          sudo locale-gen
       - name: Test and lint
         run: |
           cargo test --locked --workspace --all-targets
