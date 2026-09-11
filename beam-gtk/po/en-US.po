@@ -197,3 +197,15 @@ msgstr "Could not save connections"
 
 msgid "{feature} unavailable: {detail}"
 msgstr "{feature} unavailable: {detail}"
+
+msgid "Input queue full; disconnected to avoid losing key releases"
+msgstr "Input queue full; disconnected to avoid losing key releases"
+
+msgid "Timed out sending data"
+msgstr "Timed out sending data"
+
+msgid "Timed out reactivating the session"
+msgstr "Timed out reactivating the session"
+
+msgid "Session ended unexpectedly"
+msgstr "Session ended unexpectedly"

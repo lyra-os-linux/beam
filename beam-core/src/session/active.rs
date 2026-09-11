@@ -13,9 +13,8 @@ use ironrdp_graphics::image_processing::PixelFormat;
 use ironrdp_pdu::input::fast_path::FastPathInputEvent;
 use ironrdp_session::image::DecodedImage;
 use ironrdp_session::{fast_path, ActiveStageBuilder, ActiveStageOutput, GracefulDisconnectReason};
-use ironrdp_tls::TlsStream;
-use ironrdp_tokio::{single_sequence_step_read, split_tokio_framed, Framed, FramedWrite as _};
-use tokio::net::TcpStream;
+use ironrdp_tokio::{single_sequence_step_read, split_tokio_framed, TokioFramed};
+use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::sync::{mpsc, watch};
 use tracing::{error, warn};
 
@@ -23,7 +22,10 @@ use crate::events::{DisconnectReason, SessionEvent};
 use crate::session::clipboard::ClipboardBackendMsg;
 use crate::session::framebuffer::{DirtyRect, Framebuffer};
 use crate::session::input;
-use crate::session::SessionCommand;
+use crate::session::{wait_for_cancel, SessionCommand};
+
+const IO_TIMEOUT: Duration = Duration::from_secs(20);
+const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(20);
 
 fn to_dirty_rect(region: &ironrdp_pdu::geometry::InclusiveRectangle) -> DirtyRect {
     DirtyRect {
@@ -37,18 +39,21 @@ fn to_dirty_rect(region: &ironrdp_pdu::geometry::InclusiveRectangle) -> DirtyRec
 // This is the single session orchestration boundary: keeping the independently
 // bounded command/event channels explicit makes backpressure policy reviewable.
 #[allow(clippy::too_many_arguments)]
-pub(crate) async fn run(
-    framed: Framed<ironrdp_tokio::TokioStream<TlsStream<TcpStream>>>,
+pub(crate) async fn run<S>(
+    framed: TokioFramed<S>,
     connection_result: ConnectionResult,
     events: mpsc::Sender<SessionEvent>,
     mut commands: mpsc::Receiver<SessionCommand>,
     mut essential_commands: mpsc::Receiver<SessionCommand>,
     mut pointer_position: watch::Receiver<Option<crate::session::InputEvent>>,
     mut clipboard_generation: watch::Receiver<u64>,
-    mut cancelled: watch::Receiver<bool>,
+    mut cancelled: watch::Receiver<Option<DisconnectReason>>,
     mut clipboard_backend_rx: mpsc::UnboundedReceiver<ClipboardBackendMsg>,
     framebuffer: Arc<Framebuffer>,
-) {
+) -> DisconnectReason
+where
+    S: AsyncRead + AsyncWrite + Unpin + Send + Sync,
+{
     let (mut reader, mut writer) = split_tokio_framed(framed);
 
     let desktop_size = connection_result.desktop_size;
@@ -80,26 +85,25 @@ pub(crate) async fn run(
     }
     .build();
 
+    let mut clipboard_backend_open = true;
     let mut cleanup_interval = tokio::time::interval(Duration::from_secs(5));
 
     let disconnect_reason = 'outer: loop {
         let outputs = tokio::select! {
-            _ = cancelled.changed() => {
+            _ = wait_for_cancel(&mut cancelled) => {
                 break 'outer GracefulDisconnectReason::UserInitiated;
             }
             frame = reader.read_pdu() => {
                 let (action, payload) = match frame {
                     Ok(frame) => frame,
                     Err(e) => {
-                        let _ = events.send(SessionEvent::Disconnected(DisconnectReason::ConnectionLost(e.to_string()))).await;
-                        return;
+                        return DisconnectReason::ConnectionLost(e.to_string());
                     }
                 };
                 match active_stage.process(&mut image, action, &payload) {
                     Ok(outputs) => outputs,
                     Err(e) => {
-                        let _ = events.send(SessionEvent::Disconnected(DisconnectReason::ConnectionLost(e.report().to_string()))).await;
-                        return;
+                        return DisconnectReason::ConnectionLost(e.report().to_string());
                     }
                 }
             }
@@ -135,12 +139,12 @@ pub(crate) async fn run(
                         let fastpath_events = input::ctrl_alt_del_sequence();
                         process_input(&mut active_stage, &mut image, &fastpath_events)
                     }
-                    _ => Vec::new(),
+                    _ => break 'outer GracefulDisconnectReason::UserInitiated,
                 }
             }
             changed = clipboard_generation.changed() => {
                 if changed.is_err() {
-                    Vec::new()
+                    break 'outer GracefulDisconnectReason::UserInitiated
                 } else {
                     clipboard_generation.borrow_and_update();
                     with_cliprdr(&mut active_stage, &events, |cliprdr| {
@@ -150,7 +154,7 @@ pub(crate) async fn run(
             }
             changed = pointer_position.changed() => {
                 if changed.is_err() {
-                    Vec::new()
+                    break 'outer GracefulDisconnectReason::UserInitiated
                 } else if let Some(event) = *pointer_position.borrow_and_update() {
                     let fastpath_events = input::to_fastpath(event);
                     process_input(&mut active_stage, &mut image, &fastpath_events)
@@ -158,9 +162,12 @@ pub(crate) async fn run(
                     Vec::new()
                 }
             }
-            clipboard_msg = clipboard_backend_rx.recv() => {
+            clipboard_msg = clipboard_backend_rx.recv(), if clipboard_backend_open => {
                 match clipboard_msg {
-                    None => Vec::new(),
+                    None => {
+                        clipboard_backend_open = false;
+                        Vec::new()
+                    },
                     Some(ClipboardBackendMsg::InitiateCopy) => {
                         with_cliprdr(&mut active_stage, &events, |cliprdr| {
                             cliprdr.initiate_copy(&[ClipboardFormat::new(ClipboardFormatId::CF_UNICODETEXT)])
@@ -192,15 +199,8 @@ pub(crate) async fn run(
         for output in outputs {
             match output {
                 ActiveStageOutput::ResponseFrame(frame) => {
-                    if writer.write_all(&frame).await.is_err() {
-                        let _ = events
-                            .send(SessionEvent::Disconnected(
-                                DisconnectReason::ConnectionLost(
-                                    "falha ao enviar dados".to_owned(),
-                                ),
-                            ))
-                            .await;
-                        return;
+                    if let Err(reason) = write_frame(&mut writer, &frame, &mut cancelled).await {
+                        return reason;
                     }
                 }
                 ActiveStageOutput::GraphicsUpdate(region) => {
@@ -218,72 +218,73 @@ pub(crate) async fn run(
                 ActiveStageOutput::DeactivateAll => {
                     let mut connection_activation = activation_factory.create();
                     let mut buf = WriteBuf::new();
-                    loop {
-                        let written = match single_sequence_step_read(
-                            &mut reader,
-                            &mut connection_activation,
-                            &mut buf,
-                        )
-                        .await
-                        {
-                            Ok(written) => written,
-                            Err(e) => {
-                                let _ = events
-                                    .send(SessionEvent::Disconnected(
-                                        DisconnectReason::ConnectionLost(e.report().to_string()),
+                    let reactivation = async {
+                        loop {
+                            let written = match single_sequence_step_read(
+                                &mut reader,
+                                &mut connection_activation,
+                                &mut buf,
+                            )
+                            .await
+                            {
+                                Ok(written) => written,
+                                Err(e) => {
+                                    return Err(DisconnectReason::ConnectionLost(
+                                        e.report().to_string(),
                                     ))
-                                    .await;
-                                return;
-                            }
-                        };
-                        if written.size().is_some() && writer.write_all(buf.filled()).await.is_err()
-                        {
-                            let _ = events
-                                .send(SessionEvent::Disconnected(
-                                    DisconnectReason::ConnectionLost(
-                                        "falha ao enviar dados".to_owned(),
-                                    ),
-                                ))
-                                .await;
-                            return;
-                        }
-                        if let ConnectionActivationState::Finalized {
-                            desktop_size,
-                            share_id,
-                            enable_server_pointer,
-                            pointer_software_rendering,
-                        } = connection_activation.connection_activation_state()
-                        {
-                            image = DecodedImage::new(
-                                PixelFormat::BgrA32,
-                                desktop_size.width,
-                                desktop_size.height,
-                            );
-                            active_stage.set_fastpath_processor(
-                                fast_path::ProcessorBuilder {
-                                    io_channel_id: connection_activation.io_channel_id(),
-                                    user_channel_id: connection_activation.user_channel_id(),
-                                    share_id,
-                                    enable_server_pointer,
-                                    pointer_software_rendering,
-                                    bulk_decompressor: None,
                                 }
-                                .build(),
-                            );
-                            active_stage.set_share_id(share_id);
-                            active_stage.set_enable_server_pointer(enable_server_pointer);
-                            framebuffer.replace(
-                                desktop_size.width,
-                                desktop_size.height,
-                                image.data().to_vec(),
-                            );
-                            let _ = events
-                                .send(SessionEvent::Connected {
-                                    width: desktop_size.width,
-                                    height: desktop_size.height,
-                                })
-                                .await;
-                            break;
+                            };
+                            if written.size().is_some() {
+                                write_frame(&mut writer, buf.filled(), &mut cancelled).await?;
+                            }
+                            if let ConnectionActivationState::Finalized {
+                                desktop_size,
+                                share_id,
+                                enable_server_pointer,
+                                pointer_software_rendering,
+                            } = connection_activation.connection_activation_state()
+                            {
+                                image = DecodedImage::new(
+                                    PixelFormat::BgrA32,
+                                    desktop_size.width,
+                                    desktop_size.height,
+                                );
+                                active_stage.set_fastpath_processor(
+                                    fast_path::ProcessorBuilder {
+                                        io_channel_id: connection_activation.io_channel_id(),
+                                        user_channel_id: connection_activation.user_channel_id(),
+                                        share_id,
+                                        enable_server_pointer,
+                                        pointer_software_rendering,
+                                        bulk_decompressor: None,
+                                    }
+                                    .build(),
+                                );
+                                active_stage.set_share_id(share_id);
+                                active_stage.set_enable_server_pointer(enable_server_pointer);
+                                framebuffer.replace(
+                                    desktop_size.width,
+                                    desktop_size.height,
+                                    image.data().to_vec(),
+                                );
+                                let _ = events
+                                    .send(SessionEvent::Connected {
+                                        width: desktop_size.width,
+                                        height: desktop_size.height,
+                                    })
+                                    .await;
+                                return Ok(());
+                            }
+                        }
+                    };
+                    // One deadline for the whole activation, not a new budget per PDU.
+                    match tokio::time::timeout(ACTIVATION_TIMEOUT, reactivation).await {
+                        Ok(Ok(())) => {}
+                        Ok(Err(reason)) => return reason,
+                        Err(_) => {
+                            return DisconnectReason::ConnectionLost(
+                                "Timed out reactivating the session".into(),
+                            )
                         }
                     }
                 }
@@ -293,11 +294,25 @@ pub(crate) async fn run(
         }
     };
 
-    let reason = match disconnect_reason {
+    match disconnect_reason {
         GracefulDisconnectReason::UserInitiated => DisconnectReason::UserInitiated,
         other => DisconnectReason::ConnectionLost(other.to_string()),
-    };
-    let _ = events.send(SessionEvent::Disconnected(reason)).await;
+    }
+}
+
+async fn write_frame<W: ironrdp_tokio::FramedWrite>(
+    writer: &mut W,
+    frame: &[u8],
+    cancelled: &mut watch::Receiver<Option<DisconnectReason>>,
+) -> Result<(), DisconnectReason> {
+    tokio::select! {
+        result = tokio::time::timeout(IO_TIMEOUT, writer.write_all(frame)) => match result {
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(_)) => Err(DisconnectReason::ConnectionLost("falha ao enviar dados".into())),
+            Err(_) => Err(DisconnectReason::ConnectionLost("Timed out sending data".into())),
+        },
+        reason = wait_for_cancel(cancelled) => Err(reason),
+    }
 }
 
 fn process_input(
@@ -376,3 +391,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "active_tests.rs"]
+mod transport_tests;

@@ -63,6 +63,8 @@ fn text_to_cf_unicodetext(text: &str) -> Vec<u8> {
 }
 
 // `slice::as_chunks` requires a newer compiler than Beam's supported MSRV.
+// Some supported Clippy builds do not expose this lint yet.
+#[allow(unknown_lints)]
 #[allow(clippy::chunks_exact_to_as_chunks)]
 fn cf_unicodetext_to_text(data: &[u8]) -> String {
     let units: Vec<u16> = data

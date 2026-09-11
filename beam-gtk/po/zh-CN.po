@@ -197,3 +197,15 @@ msgstr "无法保存连接"
 
 msgid "{feature} unavailable: {detail}"
 msgstr "{feature} 不可用：{detail}"
+
+msgid "Input queue full; disconnected to avoid losing key releases"
+msgstr "输入队列已满；已断开连接以避免丢失按键释放事件"
+
+msgid "Timed out sending data"
+msgstr "发送数据超时"
+
+msgid "Timed out reactivating the session"
+msgstr "重新激活会话超时"
+
+msgid "Session ended unexpectedly"
+msgstr "会话意外结束"

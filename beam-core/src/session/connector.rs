@@ -18,7 +18,8 @@ const NETWORK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 const NETWORK_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(100);
 const PROMPT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
 
-use crate::events::{CertPromptRequest, SessionEvent};
+use super::wait_for_cancel;
+use crate::events::{CertPromptRequest, DisconnectReason, SessionEvent};
 use crate::known_hosts::{self, Fingerprint, TrustDecision};
 use crate::profile::ConnectionProfile;
 
@@ -65,7 +66,7 @@ impl ironrdp_tokio::NetworkClient for NoNetworkClient {
     }
 }
 
-fn build_config(
+pub(super) fn build_config(
     profile: &ConnectionProfile,
     username: &str,
     password: &str,
@@ -182,14 +183,14 @@ pub(crate) async fn connect(
     password: &str,
     cliprdr: ironrdp_cliprdr::Cliprdr<ironrdp_cliprdr::Client>,
     events: &mpsc::Sender<SessionEvent>,
-    mut cancelled: watch::Receiver<bool>,
+    mut cancelled: watch::Receiver<Option<DisconnectReason>>,
 ) -> Result<Connected, ConnectError> {
     let address = profile.address();
 
     let stream = tokio::select! {
         result = tokio::time::timeout(NETWORK_TIMEOUT, TcpStream::connect(&address)) =>
             result.map_err(|_| ConnectError::Timeout("conexão TCP"))??,
-        _ = cancelled.changed() => return Err(ConnectError::Cancelled),
+        _ = wait_for_cancel(&mut cancelled) => return Err(ConnectError::Cancelled),
     };
     stream.set_nodelay(true)?;
     let client_addr = stream.local_addr()?;
@@ -203,20 +204,20 @@ pub(crate) async fn connect(
     let should_upgrade = tokio::select! {
         result = tokio::time::timeout(NETWORK_TIMEOUT, ironrdp_tokio::connect_begin(&mut framed, &mut connector)) =>
             result.map_err(|_| ConnectError::Timeout("negociação RDP inicial"))??,
-        _ = cancelled.changed() => return Err(ConnectError::Cancelled),
+        _ = wait_for_cancel(&mut cancelled) => return Err(ConnectError::Cancelled),
     };
 
     let (initial_stream, leftover) = framed.into_inner();
     let (tls_stream, tls_cert) = tokio::select! {
         result = tokio::time::timeout(NETWORK_TIMEOUT, ironrdp_tls::upgrade(initial_stream, profile.normalized_host())) =>
             result.map_err(|_| ConnectError::Timeout("negociação TLS"))??,
-        _ = cancelled.changed() => return Err(ConnectError::Cancelled),
+        _ = wait_for_cancel(&mut cancelled) => return Err(ConnectError::Cancelled),
     };
 
     tokio::select! {
         result = tokio::time::timeout(PROMPT_TIMEOUT, confirm_certificate(&address, &tls_cert, events)) =>
             result.map_err(|_| ConnectError::Timeout("confirmação do certificado"))??,
-        _ = cancelled.changed() => return Err(ConnectError::Cancelled),
+        _ = wait_for_cancel(&mut cancelled) => return Err(ConnectError::Cancelled),
     }
 
     let upgraded = ironrdp_tokio::mark_as_upgraded(should_upgrade, &mut connector);
@@ -236,7 +237,7 @@ pub(crate) async fn connect(
             upgraded, connector, &mut framed, &mut network_client,
             ServerName::new(profile.normalized_host()), server_public_key, None,
         )) => result.map_err(|_| ConnectError::Timeout("autenticação RDP"))??,
-        _ = cancelled.changed() => return Err(ConnectError::Cancelled),
+        _ = wait_for_cancel(&mut cancelled) => return Err(ConnectError::Cancelled),
     };
 
     Ok(Connected {
@@ -277,7 +278,7 @@ mod tests {
     async fn silent_server_times_out_during_handshake() {
         let profile = silent_server_profile().await;
         let (events, _events_rx) = mpsc::channel(4);
-        let (_cancel, cancelled) = watch::channel(false);
+        let (_cancel, cancelled) = watch::channel(None);
         let error = match connect(&profile, "user", "password", cliprdr(), &events, cancelled).await
         {
             Ok(_) => panic!("silent server must time out"),
@@ -291,10 +292,10 @@ mod tests {
     async fn cancellation_interrupts_pending_handshake() {
         let profile = silent_server_profile().await;
         let (events, _events_rx) = mpsc::channel(4);
-        let (cancel, cancelled) = watch::channel(false);
+        let (cancel, cancelled) = watch::channel(None);
         tokio::spawn(async move {
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-            cancel.send_replace(true);
+            cancel.send_replace(Some(DisconnectReason::UserInitiated));
         });
         let error = match connect(&profile, "user", "password", cliprdr(), &events, cancelled).await
         {

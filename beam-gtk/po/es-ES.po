@@ -197,3 +197,15 @@ msgstr "No se pudieron guardar las conexiones"
 
 msgid "{feature} unavailable: {detail}"
 msgstr "{feature} no disponible: {detail}"
+
+msgid "Input queue full; disconnected to avoid losing key releases"
+msgstr "Cola de entrada llena; conexión cerrada para evitar perder liberaciones de teclas"
+
+msgid "Timed out sending data"
+msgstr "Se agotó el tiempo de espera al enviar datos"
+
+msgid "Timed out reactivating the session"
+msgstr "Se agotó el tiempo de espera al reactivar la sesión"
+
+msgid "Session ended unexpectedly"
+msgstr "La sesión terminó inesperadamente"
