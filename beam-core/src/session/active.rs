@@ -44,7 +44,7 @@ pub(crate) async fn run<S>(
     connection_result: ConnectionResult,
     events: mpsc::Sender<SessionEvent>,
     mut commands: mpsc::Receiver<SessionCommand>,
-    mut essential_commands: mpsc::UnboundedReceiver<SessionCommand>,
+    mut essential_commands: mpsc::Receiver<SessionCommand>,
     mut pointer_position: watch::Receiver<Option<crate::session::InputEvent>>,
     mut clipboard_generation: watch::Receiver<u64>,
     mut cancelled: watch::Receiver<Option<DisconnectReason>>,
@@ -85,6 +85,7 @@ where
     }
     .build();
 
+    let mut clipboard_backend_open = true;
     let mut cleanup_interval = tokio::time::interval(Duration::from_secs(5));
 
     let disconnect_reason = 'outer: loop {
@@ -138,12 +139,12 @@ where
                         let fastpath_events = input::ctrl_alt_del_sequence();
                         process_input(&mut active_stage, &mut image, &fastpath_events)
                     }
-                    _ => Vec::new(),
+                    _ => break 'outer GracefulDisconnectReason::UserInitiated,
                 }
             }
             changed = clipboard_generation.changed() => {
                 if changed.is_err() {
-                    Vec::new()
+                    break 'outer GracefulDisconnectReason::UserInitiated
                 } else {
                     clipboard_generation.borrow_and_update();
                     with_cliprdr(&mut active_stage, &events, |cliprdr| {
@@ -153,7 +154,7 @@ where
             }
             changed = pointer_position.changed() => {
                 if changed.is_err() {
-                    Vec::new()
+                    break 'outer GracefulDisconnectReason::UserInitiated
                 } else if let Some(event) = *pointer_position.borrow_and_update() {
                     let fastpath_events = input::to_fastpath(event);
                     process_input(&mut active_stage, &mut image, &fastpath_events)
@@ -161,9 +162,12 @@ where
                     Vec::new()
                 }
             }
-            clipboard_msg = clipboard_backend_rx.recv() => {
+            clipboard_msg = clipboard_backend_rx.recv(), if clipboard_backend_open => {
                 match clipboard_msg {
-                    None => Vec::new(),
+                    None => {
+                        clipboard_backend_open = false;
+                        Vec::new()
+                    },
                     Some(ClipboardBackendMsg::InitiateCopy) => {
                         with_cliprdr(&mut active_stage, &events, |cliprdr| {
                             cliprdr.initiate_copy(&[ClipboardFormat::new(ClipboardFormatId::CF_UNICODETEXT)])
@@ -307,12 +311,7 @@ async fn write_frame<W: ironrdp_tokio::FramedWrite>(
             Ok(Err(_)) => Err(DisconnectReason::ConnectionLost("falha ao enviar dados".into())),
             Err(_) => Err(DisconnectReason::ConnectionLost("Timed out sending data".into())),
         },
-        changed = cancelled.changed() => {
-            match changed {
-                Ok(()) => Err(cancelled.borrow().clone().unwrap_or(DisconnectReason::UserInitiated)),
-                Err(_) => Err(DisconnectReason::ConnectionLost("sessão cancelada".into())),
-            }
-        }
+        reason = wait_for_cancel(cancelled) => Err(reason),
     }
 }
 
@@ -392,3 +391,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "active_tests.rs"]
+mod transport_tests;

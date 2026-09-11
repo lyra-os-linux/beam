@@ -24,8 +24,10 @@ use crate::events::{CredentialsPromptRequest, DisconnectReason, SessionEvent};
 use crate::profile::ConnectionProfile;
 use crate::secrets::{self, SecretKey};
 
+const ESSENTIAL_QUEUE_CAPACITY: usize = 4096;
+
 /// Commands a frontend can send into a running session. Internal plumbing only — a frontend
-/// never constructs these directly, it goes through [`SessionHandle`]'s methods.
+/// never constructs these directly, it goes through [`SessionController`]'s methods.
 pub(crate) enum SessionCommand {
     Input(InputEvent),
     CtrlAltDel,
@@ -71,7 +73,7 @@ impl SessionEvents {
 #[derive(Clone)]
 pub struct SessionController {
     commands: mpsc::Sender<SessionCommand>,
-    essential_commands: mpsc::UnboundedSender<SessionCommand>,
+    essential_commands: mpsc::Sender<SessionCommand>,
     pointer_position: watch::Sender<Option<InputEvent>>,
     clipboard_generation: watch::Sender<u64>,
     cancelled: watch::Sender<Option<DisconnectReason>>,
@@ -101,8 +103,17 @@ impl SessionController {
         if self.cancelled.borrow().is_some() {
             return;
         }
-        if self.essential_commands.send(command).is_err() {
-            debug!("sessão encerrada antes do envio de entrada discreta");
+        match self.essential_commands.try_send(command) {
+            Ok(()) => {}
+            Err(mpsc::error::TrySendError::Full(_)) => {
+                // Never continue a session after losing a key/button transition.
+                self.request_stop(DisconnectReason::ConnectionLost(
+                    "Input queue full; disconnected to avoid losing key releases".into(),
+                ));
+            }
+            Err(mpsc::error::TrySendError::Closed(_)) => {
+                debug!("sessão encerrada antes do envio de entrada discreta");
+            }
         }
     }
 
@@ -144,7 +155,7 @@ pub fn connect(
 ) -> (SessionController, SessionEvents) {
     let (events_tx, events_rx) = mpsc::channel(64);
     let (commands_tx, commands_rx) = mpsc::channel(256);
-    let (essential_tx, essential_rx) = mpsc::unbounded_channel();
+    let (essential_tx, essential_rx) = mpsc::channel(ESSENTIAL_QUEUE_CAPACITY);
     let (pointer_tx, pointer_rx) = watch::channel(None);
     let (clipboard_tx, clipboard_rx) = watch::channel(0);
     let (cancel_tx, cancel_rx) = watch::channel(None);
@@ -227,7 +238,7 @@ async fn run_session(
     profile: ConnectionProfile,
     events: mpsc::Sender<SessionEvent>,
     commands: mpsc::Receiver<SessionCommand>,
-    essential_commands: mpsc::UnboundedReceiver<SessionCommand>,
+    essential_commands: mpsc::Receiver<SessionCommand>,
     pointer_position: watch::Receiver<Option<InputEvent>>,
     clipboard_generation: watch::Receiver<u64>,
     framebuffer: Arc<Framebuffer>,
@@ -333,11 +344,11 @@ mod tests {
     fn test_controller() -> (
         SessionController,
         mpsc::Receiver<SessionCommand>,
-        mpsc::UnboundedReceiver<SessionCommand>,
+        mpsc::Receiver<SessionCommand>,
         watch::Receiver<Option<InputEvent>>,
     ) {
         let (commands, commands_rx) = mpsc::channel(2);
-        let (essential, essential_rx) = mpsc::unbounded_channel();
+        let (essential, essential_rx) = mpsc::channel(ESSENTIAL_QUEUE_CAPACITY);
         let (pointer, pointer_rx) = watch::channel(None);
         let (clipboard_generation, _) = watch::channel(0);
         let (cancelled, _) = watch::channel(None);
@@ -394,5 +405,113 @@ mod tests {
                 ..
             }))
         ));
+    }
+    #[tokio::test]
+    async fn full_input_queue_cancels_without_blocking_or_silently_losing_a_release() {
+        let (controller, mut commands, mut essential, _) = test_controller();
+        // Filling the ordinary queue must not prevent essential input or cancellation.
+        controller
+            .commands
+            .try_send(SessionCommand::CtrlAltDel)
+            .ok()
+            .unwrap();
+        controller
+            .commands
+            .try_send(SessionCommand::CtrlAltDel)
+            .ok()
+            .unwrap();
+        for i in 0..ESSENTIAL_QUEUE_CAPACITY {
+            controller.send_input(InputEvent::Key {
+                scancode: 30,
+                extended: false,
+                pressed: i % 2 == 0,
+            });
+        }
+        assert!(controller.cancelled.borrow().is_none());
+        controller.send_input(InputEvent::Key {
+            scancode: 30,
+            extended: false,
+            pressed: false,
+        });
+        assert!(
+            matches!(&*controller.cancelled.borrow(), Some(DisconnectReason::ConnectionLost(text))
+            if text == "Input queue full; disconnected to avoid losing key releases")
+        );
+        // Later close requests preserve the useful overload diagnostic.
+        controller.disconnect();
+        assert!(matches!(
+            &*controller.cancelled.borrow(),
+            Some(DisconnectReason::ConnectionLost(_))
+        ));
+        assert_eq!(commands.len(), 2);
+        assert!(commands.try_recv().is_ok());
+        for i in 0..ESSENTIAL_QUEUE_CAPACITY {
+            assert!(
+                matches!(essential.try_recv(), Ok(SessionCommand::Input(InputEvent::Key { pressed, .. }))
+                if pressed == (i % 2 == 0))
+            );
+        }
+        assert!(essential.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn terminal_event_bypasses_full_event_queue_and_is_delivered_once() {
+        let (events, receiver) = mpsc::channel(1);
+        events
+            .try_send(SessionEvent::Connected {
+                width: 1,
+                height: 1,
+            })
+            .unwrap();
+        let (finished, finished_rx) = oneshot::channel();
+        let (cancel, cancelled) = watch::channel(None);
+        let mut stream = SessionEvents {
+            events: receiver,
+            finished: Some(finished_rx),
+        };
+        let task = tokio::spawn(async move {
+            let blocked = async {
+                events
+                    .send(SessionEvent::Connected {
+                        width: 2,
+                        height: 2,
+                    })
+                    .await
+                    .unwrap();
+                panic!("the full queue must not be drained");
+            };
+            let reason = supervise(blocked, &events, cancelled).await;
+            finished.send(reason).unwrap();
+        });
+        tokio::task::yield_now().await;
+        cancel.send_replace(Some(DisconnectReason::UserInitiated));
+        task.await.unwrap();
+        assert!(matches!(
+            stream.next_event().await,
+            Some(SessionEvent::Disconnected(DisconnectReason::UserInitiated))
+        ));
+        assert!(stream.next_event().await.is_none());
+    }
+
+    #[tokio::test]
+    async fn cancellation_already_requested_never_starts_session_work() {
+        let (events, _receiver) = mpsc::channel(1);
+        let (_cancel, cancelled) = watch::channel(Some(DisconnectReason::UserInitiated));
+        let reason = supervise(
+            async { panic!("must not access keyring or network") },
+            &events,
+            cancelled,
+        )
+        .await;
+        assert!(matches!(reason, DisconnectReason::UserInitiated));
+    }
+
+    #[tokio::test]
+    async fn dropping_all_controllers_cancels_pending_work() {
+        let (events, _receiver) = mpsc::channel(1);
+        let (cancel, cancelled) = watch::channel(None);
+        drop(cancel);
+        let reason = supervise(std::future::pending(), &events, cancelled).await;
+        assert!(matches!(reason, DisconnectReason::UserInitiated));
     }
 }

@@ -63,3 +63,22 @@ caminho slow-path com dados comprimidos.
 ## Licença
 
 GPL-3.0-or-later. Veja [`LICENSE`](LICENSE).
+
+### Responsividade da sessão
+
+Escritas RDP têm prazo de 20 segundos; a reativação inteira usa um único prazo
+de 20 segundos, inclusive quando o servidor envia apenas parte de um pacote.
+Desconectar ou fechar a janela cancela imediatamente o trabalho pendente,
+incluindo chaveiro, prompts e transporte. Uma escrita parcial encerra a conexão,
+sem tentar reenviar o mesmo quadro nela.
+
+Movimentos do ponteiro guardam somente a posição mais recente. Teclas, botões e
+Ctrl+Alt+Del preservam a ordem em uma fila separada de 4096 comandos, sem bloquear
+o GTK. Se essa fila esgotar, a sessão encerra com diagnóstico explícito: ela não
+continua após perder uma transição de tecla. A notificação final de desconexão
+independe da fila de eventos da interface e é entregue uma única vez.
+
+Os testes do core exercitam o loop RDP real usando um transporte em memória com
+capacidade de um byte: servidor que não lê, escrita parcial, reativação incompleta,
+cancelamento e descarte da interface. O CI também abre e fecha uma janela GTK em
+um display privado enquanto acumula entradas de teclado.

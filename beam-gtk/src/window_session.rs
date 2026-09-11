@@ -427,4 +427,58 @@ mod tests {
         profile.fullscreen = true;
         assert!(should_start_fullscreen(&profile));
     }
+    #[test]
+    #[ignore = "requires a private GTK display; run under Xvfb or headless Mutter"]
+    fn closing_window_with_queued_input_keeps_main_context_responsive() {
+        use super::*;
+        use beam_core::events::{DisconnectReason, SessionEvent};
+        use beam_core::session::InputEvent;
+        adw::init().unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        // This runtime is deliberately not driven until after close: no keyring/network access.
+        let (controller, mut events) = beam_core::session::connect(
+            ConnectionProfile::new("test", "unused", "user"),
+            runtime.handle(),
+        );
+        let controller = Rc::new(RefCell::new(controller));
+        let window = adw::ApplicationWindow::builder().build();
+        disconnect_on_close(&window, controller.clone());
+        window.present();
+        let ticked = Rc::new(std::cell::Cell::new(false));
+        let ticked_callback = ticked.clone();
+        glib::idle_add_local_once(move || {
+            // More than the former bounded queue can hold, including matched key releases.
+            for _ in 0..512 {
+                for pressed in [true, false] {
+                    controller.borrow().send_input(InputEvent::Key {
+                        scancode: 30,
+                        extended: false,
+                        pressed,
+                    });
+                }
+            }
+            window.close();
+            ticked_callback.set(true);
+        });
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+        let context = glib::MainContext::default();
+        while !ticked.get() && std::time::Instant::now() < deadline {
+            context.iteration(false);
+        }
+        assert!(ticked.get(), "GTK callback stalled");
+        runtime.block_on(async {
+            let event =
+                tokio::time::timeout(std::time::Duration::from_secs(1), events.next_event())
+                    .await
+                    .unwrap();
+            assert!(matches!(
+                event,
+                Some(SessionEvent::Disconnected(DisconnectReason::UserInitiated))
+            ));
+            assert!(events.next_event().await.is_none());
+        });
+    }
 }
