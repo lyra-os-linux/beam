@@ -28,10 +28,21 @@ The branch reported `protected=false`, and its applicable-rules query returned
 an empty list. Protection therefore had to be created rather than merely
 adding a check to an existing policy.
 
-Issue #1 tracks the live qualification: an administrator attempts to merge a
-controlled PR while the check is pending, again while it fails intentionally,
-and finally after the temporary probe is removed and the full check succeeds.
-The exact revisions and API responses are recorded before closing the issue.
+[PR #5](https://github.com/lyra-os-linux/beam/pull/5) exercised actual merge
+requests using the administrator account and the exact head revision
+`d006d52e0bcc2b94f37eee5d794e8c00c48437a2`:
+
+| Required check state | Merge response |
+| --- | --- |
+| Running | HTTP 405: `Required status check "contracts" is in progress.` |
+| Intentionally failed | HTTP 405: `Required status check "contracts" is failing.` |
+
+The [controlled run](https://github.com/lyra-os-linux/beam/actions/runs/34991817969)
+used a temporary failure step limited to that PR branch. Both refusals left
+`main` at `d131f19a1ba0809f96057b8e05bca65ed137e964`. The probe was then removed,
+restoring the workflow byte for byte before running the full CI and integrating
+this documentation. The final passing run and successful squash merge receipt
+are recorded in [issue #1](https://github.com/lyra-os-linux/beam/issues/1).
 
 ## Exceptions and recovery
 
