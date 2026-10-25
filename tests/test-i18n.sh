@@ -30,6 +30,14 @@ rg -o 'gettext\("[^"\\]*"\)' beam-gtk/src --glob '*.rs' \
         echo "$message" >> "$missing_keys"
     fi
 done
+# The same for the web interface: every tr("…")/trf("…") literal in ui/js.
+rg -o '\btrf?\("[^"\\]*"' beam-gtk/ui/js --glob '*.js' \
+    | sed 's/.*trf\?("//; s/"$//' | sort -u | while IFS= read -r message; do
+    if ! grep -Fq "msgid \"$message\"" "$canonical"; then
+        echo "missing canonical key (ui): $message" >&2
+        echo "$message" >> "$missing_keys"
+    fi
+done
 test ! -s "$missing_keys"
 rm -f "$missing_keys"
 

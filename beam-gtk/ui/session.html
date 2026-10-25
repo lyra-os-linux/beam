@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beam</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/beam.css">
+  <link rel="stylesheet" href="css/session.css">
+  <script src="js/boot.js"></script>
+  <script type="module" src="js/session.js"></script>
+</head>
+<body class="session">
+  <header class="session-bar" id="bar" data-drag>
+    <div class="session-title" data-drag>
+      <span class="status-dot connecting" id="dot"></span>
+      <div data-drag><strong id="name" data-drag></strong><small id="meta" data-drag></small></div>
+    </div>
+    <div class="capture-hint" id="capture" hidden></div>
+    <div class="session-actions" id="actions"></div>
+    <div class="window-controls" id="window-controls"></div>
+  </header>
+  <main class="stage" id="stage">
+    <canvas class="remote" id="remote" tabindex="0"></canvas>
+    <div class="notice" id="notice" hidden></div>
+    <div class="connecting" id="overlay"></div>
+  </main>
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+</body>
+</html>

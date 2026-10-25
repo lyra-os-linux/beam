@@ -19,21 +19,21 @@
     <p>
       Beam is the RDP (Remote Desktop Protocol) client of the Lyra OS ecosystem,
       for connecting to Windows desktops and servers. It works on any modern Linux distribution,
-      with GTK4/libadwaita giving it native visual integration with GNOME and Lyra.
+      with an interface designed to match GNOME and the other Lyra apps.
     </p>
     <p xml:lang="pt-BR">
       Beam é o cliente RDP (Remote Desktop Protocol) do ecossistema Lyra OS,
       para conexão com áreas de trabalho e servidores Windows. Funciona em qualquer distribuição
-      Linux moderna, com integração visual nativa ao GNOME e ao Lyra via GTK4/libadwaita.
+      Linux moderna, com uma interface feita para combinar com o GNOME e os demais aplicativos do Lyra.
     </p>
     <p xml:lang="es-ES">
       Beam es el cliente RDP (Remote Desktop Protocol) del ecosistema Lyra OS para conectarse
       a escritorios y servidores Windows. Funciona en cualquier distribución Linux moderna,
-      con integración visual nativa en GNOME y Lyra mediante GTK4/libadwaita.
+      con una interfaz diseñada para integrarse con GNOME y las demás aplicaciones de Lyra.
     </p>
     <p xml:lang="zh-CN">
       Beam 是 Lyra OS 生态系统的 RDP（远程桌面协议）客户端，用于连接 Windows 桌面和服务器。
-      它可在任何现代 Linux 发行版上运行，并通过 GTK4/libadwaita 原生融入 GNOME 和 Lyra。
+      它可在任何现代 Linux 发行版上运行，界面与 GNOME 及其他 Lyra 应用保持一致。
     </p>
     <p>Features:</p>
     <ul>
@@ -60,6 +60,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.1.0" date="2026-10-25">
+      <description>
+        <p>New interface in the style of the Lyra OS apps: connection cards with search, a dedicated page for trusted certificates, and session windows with a minimal bar, connection progress and reconnect.</p>
+      </description>
+    </release>
     <release version="1.0.1" date="2026-07-24">
       <description>
         <p>Align the About dialog with the standard Lyra application layout.</p>

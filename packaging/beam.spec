@@ -10,7 +10,7 @@
 #
 
 Name:           beam
-Version:        1.0.1
+Version:        1.1.0
 Release:        0
 Summary:        Cliente RDP do ecossistema Lyra OS
 License:        GPL-3.0-or-later
@@ -22,8 +22,11 @@ Source1:        vendor.tar.zst
 BuildRequires:  cargo
 BuildRequires:  cargo-packaging
 BuildRequires:  rust >= 1.85
-BuildRequires:  gtk4-devel >= 4.12
-BuildRequires:  libadwaita-devel >= 1.5
+# Interface em Tauri 2 (WebKitGTK); os arquivos de ui/ são embutidos no binário.
+BuildRequires:  pkgconfig(gtk+-3.0)
+BuildRequires:  pkgconfig(webkit2gtk-4.1)
+BuildRequires:  pkgconfig(javascriptcoregtk-4.1)
+BuildRequires:  pkgconfig(libsoup-3.0)
 BuildRequires:  pkgconfig
 BuildRequires:  desktop-file-utils
 BuildRequires:  appstream-glib
@@ -39,8 +42,8 @@ conexão com máquinas Windows (desktops e servidores). É um
 aplicativo independente, utilizável em qualquer distribuição Linux moderna,
 com integração visual e funcional prioritária ao Lyra (GNOME/Wayland).
 
-Implementado em Rust, usando IronRDP (sem FFI para libfreerdp) e GTK4 +
-libadwaita. As credenciais são armazenadas no Serviço de Segredos do sistema
+Implementado em Rust, usando IronRDP (sem FFI para libfreerdp), com
+interface em Tauri (WebKitGTK) no estilo do GNOME. As credenciais são armazenadas no Serviço de Segredos do sistema
 (GNOME Keyring / KWallet); certificados de servidor são validados por
 confiança no primeiro uso (TOFU), como o known_hosts do SSH.
 

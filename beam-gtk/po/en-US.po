@@ -135,8 +135,20 @@ msgstr "Enter the password for account “{username}” to continue."
 msgid "Verify server identity"
 msgstr "Verify server identity"
 
-msgid "This is the first connection to <b>{address}</b>.\n\nCertificate fingerprint (SHA-256):\n<tt>{fingerprint}</tt>\n\nConfirm with the server administrator that this fingerprint is correct before continuing."
-msgstr "This is the first connection to <b>{address}</b>.\n\nCertificate fingerprint (SHA-256):\n<tt>{fingerprint}</tt>\n\nConfirm with the server administrator that this fingerprint is correct before continuing."
+msgid ""
+"This is the first connection to <b>{address}</b>.\n"
+"\n"
+"Certificate fingerprint (SHA-256):\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"Confirm with the server administrator that this fingerprint is correct before continuing."
+msgstr ""
+"This is the first connection to <b>{address}</b>.\n"
+"\n"
+"Certificate fingerprint (SHA-256):\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"Confirm with the server administrator that this fingerprint is correct before continuing."
 
 msgid "Trust and connect"
 msgstr "Trust and connect"
@@ -144,8 +156,26 @@ msgstr "Trust and connect"
 msgid "⚠ Possible attack detected"
 msgstr "⚠ Possible attack detected"
 
-msgid "The certificate presented by <b>{address}</b> has changed since the last connection.\n\nPrevious fingerprint:\n<tt>{previous}</tt>\n\nCurrent fingerprint:\n<tt>{fingerprint}</tt>\n\nThis may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
-msgstr "The certificate presented by <b>{address}</b> has changed since the last connection.\n\nPrevious fingerprint:\n<tt>{previous}</tt>\n\nCurrent fingerprint:\n<tt>{fingerprint}</tt>\n\nThis may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
+msgid ""
+"The certificate presented by <b>{address}</b> has changed since the last connection.\n"
+"\n"
+"Previous fingerprint:\n"
+"<tt>{previous}</tt>\n"
+"\n"
+"Current fingerprint:\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"This may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
+msgstr ""
+"The certificate presented by <b>{address}</b> has changed since the last connection.\n"
+"\n"
+"Previous fingerprint:\n"
+"<tt>{previous}</tt>\n"
+"\n"
+"Current fingerprint:\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"This may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
 
 msgid "Trust anyway"
 msgstr "Trust anyway"
@@ -209,3 +239,216 @@ msgstr "Timed out reactivating the session"
 
 msgid "Session ended unexpectedly"
 msgstr "Session ended unexpectedly"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "{bits} bits"
+msgstr "{bits} bits"
+
+msgid "Cancel connection"
+msgstr "Cancel connection"
+
+msgid "Certificate fingerprint (SHA-256)"
+msgstr "Certificate fingerprint (SHA-256)"
+
+msgid "Close dialog"
+msgstr "Close dialog"
+
+msgid "Connected"
+msgstr "Connected"
+
+msgid "Connected. Ctrl+Alt+F12 releases the keyboard and mouse."
+msgstr "Connected. Ctrl+Alt+F12 releases the keyboard and mouse."
+
+msgid "Connecting…"
+msgstr "Connecting…"
+
+msgid "Connecting to {host}…"
+msgstr "Connecting to {host}…"
+
+msgid "Connecting to {name}"
+msgstr "Connecting to {name}"
+
+msgid "Connection created."
+msgstr "Connection created."
+
+msgid "Connection deleted."
+msgstr "Connection deleted."
+
+msgid "Connection not found."
+msgstr "Connection not found."
+
+msgid "Connections"
+msgstr "Connections"
+
+msgid "Connection saved."
+msgstr "Connection saved."
+
+msgid "Connect to the selected connection"
+msgstr "Connect to the selected connection"
+
+msgid "Continue"
+msgstr "Continue"
+
+msgid "Could not connect"
+msgstr "Could not connect"
+
+msgid "Could not load connections"
+msgstr "Could not load connections"
+
+msgid "Ctrl+Alt+Del"
+msgstr "Ctrl+Alt+Del"
+
+msgid "Current fingerprint"
+msgstr "Current fingerprint"
+
+msgid "{days} d {hours} h"
+msgstr "{days} d {hours} h"
+
+msgid "Delete the connection?"
+msgstr "Delete the connection?"
+
+msgid "Delete the selected connection"
+msgstr "Delete the selected connection"
+
+msgid "Edit the selected connection"
+msgstr "Edit the selected connection"
+
+msgid "Fill in the connection name and the server."
+msgstr "Fill in the connection name and the server."
+
+msgid "Grid"
+msgstr "Grid"
+
+msgid "{hours} h {minutes} min"
+msgstr "{hours} h {minutes} min"
+
+msgid "In a session: release keyboard and mouse, leave fullscreen"
+msgstr "In a session: release keyboard and mouse, leave fullscreen"
+
+msgid "Keyboard and mouse captured"
+msgstr "Keyboard and mouse captured"
+
+msgid "Keyboard and mouse released. Click the session to capture them again."
+msgstr "Keyboard and mouse released. Click the session to capture them again."
+
+msgid "Keyboard shortcuts"
+msgstr "Keyboard shortcuts"
+
+msgid "Leave fullscreen"
+msgstr "Leave fullscreen"
+
+msgid "List"
+msgstr "List"
+
+msgid "Maximize"
+msgstr "Maximize"
+
+msgid "Minimize"
+msgstr "Minimize"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"
+
+msgid "name.domain.local or 192.168.0.10"
+msgstr "name.domain.local or 192.168.0.10"
+
+msgid "{n} connections"
+msgstr "{n} connections"
+
+msgid "Next time, Beam shows the fingerprint again for you to confirm."
+msgstr "Next time, Beam shows the fingerprint again for you to confirm."
+
+msgid "No connection matches “{query}”."
+msgstr "No connection matches “{query}”."
+
+msgid "Nothing found"
+msgstr "Nothing found"
+
+msgid "now"
+msgstr "now"
+
+msgid "{n} servers"
+msgstr "{n} servers"
+
+msgid "{n} sessions open"
+msgstr "{n} sessions open"
+
+msgid "Passwords never go to a file"
+msgstr "Passwords never go to a file"
+
+msgid "Previous fingerprint"
+msgstr "Previous fingerprint"
+
+msgid "releases"
+msgstr "releases"
+
+msgid "Remote desktop client (RDP) for the Lyra OS ecosystem."
+msgstr "Remote desktop client (RDP) for the Lyra OS ecosystem."
+
+msgid "Remove trust?"
+msgstr "Remove trust?"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Search connections"
+msgstr "Search connections"
+
+msgid "Search connections or actions…"
+msgstr "Search connections or actions…"
+
+msgid "Show navigation"
+msgstr "Show navigation"
+
+msgid "Show password"
+msgstr "Show password"
+
+msgid "Show session"
+msgstr "Show session"
+
+msgid "Some connection values are out of range."
+msgstr "Some connection values are out of range."
+
+msgid "System keyring"
+msgstr "System keyring"
+
+msgid "The certificate of {address} changed since the last connection. Someone may be impersonating the server. Only continue if the administrator confirms the change."
+msgstr "The certificate of {address} changed since the last connection. Someone may be impersonating the server. Only continue if the administrator confirms the change."
+
+msgid "The connection to {host} could not be completed."
+msgstr "The connection to {host} could not be completed."
+
+msgid "The password is asked when connecting and can be kept in the system keyring. It is never written to a file."
+msgstr "The password is asked when connecting and can be kept in the system keyring. It is never written to a file."
+
+msgid "The password saved in the keyring is deleted too, unless another connection uses the same user and server."
+msgstr "The password saved in the keyring is deleted too, unless another connection uses the same user and server."
+
+msgid "The port goes from 1 to 65535."
+msgstr "The port goes from 1 to 65535."
+
+msgid "The server's trusted certificate is kept."
+msgstr "The server's trusted certificate is kept."
+
+msgid "The session with {host} was interrupted. Whatever was open on the remote computer is still there."
+msgstr "The session with {host} was interrupted. Whatever was open on the remote computer is still there."
+
+msgid "This is the first connection to {address}. Confirm with the server administrator that this fingerprint is the same:"
+msgstr "This is the first connection to {address}. Confirm with the server administrator that this fingerprint is the same:"
+
+msgid "To confirm, type {text}:"
+msgstr "To confirm, type {text}:"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "Trust removed."
+msgstr "Trust removed."
+
+msgid "Type {text} to confirm"
+msgstr "Type {text} to confirm"
+
+msgid "Yesterday"
+msgstr "Yesterday"

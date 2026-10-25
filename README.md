@@ -6,7 +6,7 @@ integração visual e funcional prioritária com o Lyra (GNOME/Wayland).
 
 - Protocolo RDP em Rust puro via [IronRDP](https://github.com/Devolutions/IronRDP) — sem FFI para
   libfreerdp.
-- Interface em GTK4 + libadwaita.
+- Interface em Tauri 2 (WebKitGTK), no padrão visual dos aplicativos do Lyra.
 - Credenciais protegidas no Serviço de Segredos do sistema (GNOME Keyring / KWallet) via
   [`oo7`](https://crates.io/crates/oo7) — nenhuma senha é gravada em disco em texto plano.
 - Validação de certificado por confiança no primeiro uso (TOFU), como o `known_hosts` do SSH.
@@ -14,13 +14,15 @@ integração visual e funcional prioritária com o Lyra (GNOME/Wayland).
 ## Estrutura do repositório
 
 - `beam-core`: motor de sessão RDP, sem dependência de nenhum toolkit gráfico.
-- `beam-gtk`: frontend GTK4/libadwaita (binário `beam`).
+- `beam-gtk`: frontend Tauri (binário `beam`): gerenciador de conexões e uma janela por sessão,
+  com a área remota num `<canvas>` (só as regiões alteradas atravessam o IPC, um quadro por vez).
 - `data`: `.desktop`, metadados AppStream e ícones.
 
 ## Compilando
 
-Dependências de sistema (nomes Fedora/openSUSE): `gtk4-devel`, `libadwaita-devel`, um compilador
-Rust estável recente (`cargo`, `rustc`).
+Dependências de sistema (nomes openSUSE): `webkit2gtk3-devel` (API 4.1), `gtk3-devel`,
+`libsoup-devel`, `gettext-tools` e um compilador Rust estável recente (`cargo`, `rustc`). No
+Debian/Ubuntu: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libsoup-3.0-dev` e `gettext`.
 
 ```sh
 cargo build --release
@@ -74,11 +76,14 @@ sem tentar reenviar o mesmo quadro nela.
 
 Movimentos do ponteiro guardam somente a posição mais recente. Teclas, botões e
 Ctrl+Alt+Del preservam a ordem em uma fila separada de 4096 comandos, sem bloquear
-o GTK. Se essa fila esgotar, a sessão encerra com diagnóstico explícito: ela não
+a interface. Se essa fila esgotar, a sessão encerra com diagnóstico explícito: ela não
 continua após perder uma transição de tecla. A notificação final de desconexão
 independe da fila de eventos da interface e é entregue uma única vez.
 
 Os testes do core exercitam o loop RDP real usando um transporte em memória com
 capacidade de um byte: servidor que não lê, escrita parcial, reativação incompleta,
-cancelamento e descarte da interface. O CI também abre e fecha uma janela GTK em
-um display privado enquanto acumula entradas de teclado.
+cancelamento e descarte da interface.
+
+Em builds de debug, `BEAM_DEV_CONNECT=<id do perfil>`, `BEAM_DEV_TRUST=1`,
+`BEAM_DEV_PASSWORD`, `BEAM_DEV_TYPE` e `BEAM_DEV_SNAPSHOT=<arquivo.png>` conectam,
+digitam e gravam o canvas sem cliques, para validar uma sessão de ponta a ponta.
