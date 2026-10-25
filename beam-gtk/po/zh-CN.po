@@ -135,7 +135,13 @@ msgstr "输入账户“{username}”的密码以继续。"
 msgid "Verify server identity"
 msgstr "验证服务器身份"
 
-msgid "This is the first connection to <b>{address}</b>.\n\nCertificate fingerprint (SHA-256):\n<tt>{fingerprint}</tt>\n\nConfirm with the server administrator that this fingerprint is correct before continuing."
+msgid ""
+"This is the first connection to <b>{address}</b>.\n"
+"\n"
+"Certificate fingerprint (SHA-256):\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"Confirm with the server administrator that this fingerprint is correct before continuing."
 msgstr "这是首次连接到 <b>{address}</b>。\\n\\n证书指纹 (SHA-256)：\\n<tt>{fingerprint}</tt>\\n\\n继续前，请向服务器管理员确认此指纹正确。"
 
 msgid "Trust and connect"
@@ -144,7 +150,16 @@ msgstr "信任并连接"
 msgid "⚠ Possible attack detected"
 msgstr "⚠ 检测到可能的攻击"
 
-msgid "The certificate presented by <b>{address}</b> has changed since the last connection.\n\nPrevious fingerprint:\n<tt>{previous}</tt>\n\nCurrent fingerprint:\n<tt>{fingerprint}</tt>\n\nThis may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
+msgid ""
+"The certificate presented by <b>{address}</b> has changed since the last connection.\n"
+"\n"
+"Previous fingerprint:\n"
+"<tt>{previous}</tt>\n"
+"\n"
+"Current fingerprint:\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"This may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
 msgstr "<b>{address}</b> 提供的证书自上次连接后已更改。\\n\\n之前的指纹：\\n<tt>{previous}</tt>\\n\\n当前指纹：\\n<tt>{fingerprint}</tt>\\n\\n这可能表示有人试图拦截连接（中间人攻击），也可能只是服务器证书已更新。只有在确定原因时才继续。"
 
 msgid "Trust anyway"
@@ -209,3 +224,216 @@ msgstr "重新激活会话超时"
 
 msgid "Session ended unexpectedly"
 msgstr "会话意外结束"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "{bits} bits"
+msgstr "{bits} 位"
+
+msgid "Cancel connection"
+msgstr "取消连接"
+
+msgid "Certificate fingerprint (SHA-256)"
+msgstr "证书指纹（SHA-256）"
+
+msgid "Close dialog"
+msgstr "关闭对话框"
+
+msgid "Connected"
+msgstr "已连接"
+
+msgid "Connected. Ctrl+Alt+F12 releases the keyboard and mouse."
+msgstr "已连接。按 Ctrl+Alt+F12 释放键盘和鼠标。"
+
+msgid "Connecting…"
+msgstr "正在连接…"
+
+msgid "Connecting to {host}…"
+msgstr "正在连接到 {host}…"
+
+msgid "Connecting to {name}"
+msgstr "正在连接到 {name}"
+
+msgid "Connection created."
+msgstr "已创建连接。"
+
+msgid "Connection deleted."
+msgstr "已删除连接。"
+
+msgid "Connection not found."
+msgstr "找不到连接。"
+
+msgid "Connections"
+msgstr "连接"
+
+msgid "Connection saved."
+msgstr "已保存连接。"
+
+msgid "Connect to the selected connection"
+msgstr "连接到所选连接"
+
+msgid "Continue"
+msgstr "继续"
+
+msgid "Could not connect"
+msgstr "无法连接"
+
+msgid "Could not load connections"
+msgstr "无法加载连接"
+
+msgid "Ctrl+Alt+Del"
+msgstr "Ctrl+Alt+Del"
+
+msgid "Current fingerprint"
+msgstr "当前指纹"
+
+msgid "{days} d {hours} h"
+msgstr "{days} 天 {hours} 小时"
+
+msgid "Delete the connection?"
+msgstr "要删除此连接吗？"
+
+msgid "Delete the selected connection"
+msgstr "删除所选连接"
+
+msgid "Edit the selected connection"
+msgstr "编辑所选连接"
+
+msgid "Fill in the connection name and the server."
+msgstr "请填写连接名称和服务器。"
+
+msgid "Grid"
+msgstr "网格"
+
+msgid "{hours} h {minutes} min"
+msgstr "{hours} 小时 {minutes} 分钟"
+
+msgid "In a session: release keyboard and mouse, leave fullscreen"
+msgstr "会话中：释放键盘和鼠标并退出全屏"
+
+msgid "Keyboard and mouse captured"
+msgstr "键盘和鼠标已捕获"
+
+msgid "Keyboard and mouse released. Click the session to capture them again."
+msgstr "键盘和鼠标已释放。点击会话可再次捕获。"
+
+msgid "Keyboard shortcuts"
+msgstr "键盘快捷键"
+
+msgid "Leave fullscreen"
+msgstr "退出全屏"
+
+msgid "List"
+msgstr "列表"
+
+msgid "Maximize"
+msgstr "最大化"
+
+msgid "Minimize"
+msgstr "最小化"
+
+msgid "{minutes} min"
+msgstr "{minutes} 分钟"
+
+msgid "name.domain.local or 192.168.0.10"
+msgstr "name.domain.local 或 192.168.0.10"
+
+msgid "{n} connections"
+msgstr "{n} 个连接"
+
+msgid "Next time, Beam shows the fingerprint again for you to confirm."
+msgstr "下次连接时，Beam 会再次显示指纹供您确认。"
+
+msgid "No connection matches “{query}”."
+msgstr "没有与“{query}”匹配的连接。"
+
+msgid "Nothing found"
+msgstr "未找到结果"
+
+msgid "now"
+msgstr "刚刚"
+
+msgid "{n} servers"
+msgstr "{n} 台服务器"
+
+msgid "{n} sessions open"
+msgstr "{n} 个会话已打开"
+
+msgid "Passwords never go to a file"
+msgstr "密码绝不会写入文件"
+
+msgid "Previous fingerprint"
+msgstr "之前的指纹"
+
+msgid "releases"
+msgstr "释放"
+
+msgid "Remote desktop client (RDP) for the Lyra OS ecosystem."
+msgstr "Lyra OS 生态的远程桌面客户端（RDP）。"
+
+msgid "Remove trust?"
+msgstr "要移除信任吗？"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "Search connections"
+msgstr "搜索连接"
+
+msgid "Search connections or actions…"
+msgstr "搜索连接或操作…"
+
+msgid "Show navigation"
+msgstr "显示导航"
+
+msgid "Show password"
+msgstr "显示密码"
+
+msgid "Show session"
+msgstr "显示会话"
+
+msgid "Some connection values are out of range."
+msgstr "部分连接参数超出范围。"
+
+msgid "System keyring"
+msgstr "系统密钥环"
+
+msgid "The certificate of {address} changed since the last connection. Someone may be impersonating the server. Only continue if the administrator confirms the change."
+msgstr "自上次连接以来，{address} 的证书已更改。可能有人在冒充该服务器。只有在管理员确认更换后才应继续。"
+
+msgid "The connection to {host} could not be completed."
+msgstr "无法完成与 {host} 的连接。"
+
+msgid "The password is asked when connecting and can be kept in the system keyring. It is never written to a file."
+msgstr "连接时会询问密码，并可保存在系统密钥环中。密码绝不会写入文件。"
+
+msgid "The password saved in the keyring is deleted too, unless another connection uses the same user and server."
+msgstr "保存在密钥环中的密码也会被删除，除非其他连接使用相同的用户和服务器。"
+
+msgid "The port goes from 1 to 65535."
+msgstr "端口范围为 1 到 65535。"
+
+msgid "The server's trusted certificate is kept."
+msgstr "服务器的受信任证书会保留。"
+
+msgid "The session with {host} was interrupted. Whatever was open on the remote computer is still there."
+msgstr "与 {host} 的会话已中断。远程计算机上打开的内容仍然保留。"
+
+msgid "This is the first connection to {address}. Confirm with the server administrator that this fingerprint is the same:"
+msgstr "这是首次连接到 {address}。请向服务器管理员确认此指纹一致："
+
+msgid "To confirm, type {text}:"
+msgstr "要确认，请输入 {text}："
+
+msgid "Today"
+msgstr "今天"
+
+msgid "Trust removed."
+msgstr "已移除信任。"
+
+msgid "Type {text} to confirm"
+msgstr "输入 {text} 以确认"
+
+msgid "Yesterday"
+msgstr "昨天"

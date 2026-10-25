@@ -135,7 +135,13 @@ msgstr "Digite a senha da conta “{username}” para continuar."
 msgid "Verify server identity"
 msgstr "Verificar identidade do servidor"
 
-msgid "This is the first connection to <b>{address}</b>.\n\nCertificate fingerprint (SHA-256):\n<tt>{fingerprint}</tt>\n\nConfirm with the server administrator that this fingerprint is correct before continuing."
+msgid ""
+"This is the first connection to <b>{address}</b>.\n"
+"\n"
+"Certificate fingerprint (SHA-256):\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"Confirm with the server administrator that this fingerprint is correct before continuing."
 msgstr "Esta é a primeira conexão com <b>{address}</b>.\\n\\nImpressão digital do certificado (SHA-256):\\n<tt>{fingerprint}</tt>\\n\\nConfirme com o administrador do servidor que esta impressão digital está correta antes de continuar."
 
 msgid "Trust and connect"
@@ -144,7 +150,16 @@ msgstr "Confiar e conectar"
 msgid "⚠ Possible attack detected"
 msgstr "⚠ Possível ataque detectado"
 
-msgid "The certificate presented by <b>{address}</b> has changed since the last connection.\n\nPrevious fingerprint:\n<tt>{previous}</tt>\n\nCurrent fingerprint:\n<tt>{fingerprint}</tt>\n\nThis may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
+msgid ""
+"The certificate presented by <b>{address}</b> has changed since the last connection.\n"
+"\n"
+"Previous fingerprint:\n"
+"<tt>{previous}</tt>\n"
+"\n"
+"Current fingerprint:\n"
+"<tt>{fingerprint}</tt>\n"
+"\n"
+"This may indicate an attempt to intercept the connection (man-in-the-middle), or simply that the server certificate was renewed. Continue only if you are certain of the reason."
 msgstr "O certificado apresentado por <b>{address}</b> mudou desde a última conexão.\\n\\nImpressão digital anterior:\\n<tt>{previous}</tt>\\n\\nImpressão digital atual:\\n<tt>{fingerprint}</tt>\\n\\nIsso pode indicar uma tentativa de interceptar a conexão (man-in-the-middle), ou apenas que o certificado do servidor foi renovado. Continue somente se tiver certeza do motivo."
 
 msgid "Trust anyway"
@@ -209,3 +224,216 @@ msgstr "Tempo limite excedido ao reativar a sessão"
 
 msgid "Session ended unexpectedly"
 msgstr "A sessão terminou inesperadamente"
+
+msgid "Actions"
+msgstr "Ações"
+
+msgid "{bits} bits"
+msgstr "{bits} bits"
+
+msgid "Cancel connection"
+msgstr "Cancelar conexão"
+
+msgid "Certificate fingerprint (SHA-256)"
+msgstr "Impressão digital do certificado (SHA-256)"
+
+msgid "Close dialog"
+msgstr "Fechar diálogo"
+
+msgid "Connected"
+msgstr "Conectado"
+
+msgid "Connected. Ctrl+Alt+F12 releases the keyboard and mouse."
+msgstr "Conectado. Ctrl+Alt+F12 libera o teclado e o mouse."
+
+msgid "Connecting…"
+msgstr "Conectando…"
+
+msgid "Connecting to {host}…"
+msgstr "Conectando a {host}…"
+
+msgid "Connecting to {name}"
+msgstr "Conectando a {name}"
+
+msgid "Connection created."
+msgstr "Conexão criada."
+
+msgid "Connection deleted."
+msgstr "Conexão excluída."
+
+msgid "Connection not found."
+msgstr "Conexão não encontrada."
+
+msgid "Connections"
+msgstr "Conexões"
+
+msgid "Connection saved."
+msgstr "Conexão salva."
+
+msgid "Connect to the selected connection"
+msgstr "Conectar à conexão selecionada"
+
+msgid "Continue"
+msgstr "Continuar"
+
+msgid "Could not connect"
+msgstr "Não foi possível conectar"
+
+msgid "Could not load connections"
+msgstr "Não foi possível carregar as conexões"
+
+msgid "Ctrl+Alt+Del"
+msgstr "Ctrl+Alt+Del"
+
+msgid "Current fingerprint"
+msgstr "Impressão atual"
+
+msgid "{days} d {hours} h"
+msgstr "{days} d {hours} h"
+
+msgid "Delete the connection?"
+msgstr "Excluir a conexão?"
+
+msgid "Delete the selected connection"
+msgstr "Excluir a conexão selecionada"
+
+msgid "Edit the selected connection"
+msgstr "Editar a conexão selecionada"
+
+msgid "Fill in the connection name and the server."
+msgstr "Preencha o nome da conexão e o servidor."
+
+msgid "Grid"
+msgstr "Grade"
+
+msgid "{hours} h {minutes} min"
+msgstr "{hours} h {minutes} min"
+
+msgid "In a session: release keyboard and mouse, leave fullscreen"
+msgstr "Na sessão: liberar teclado e mouse e sair da tela cheia"
+
+msgid "Keyboard and mouse captured"
+msgstr "Teclado e mouse capturados"
+
+msgid "Keyboard and mouse released. Click the session to capture them again."
+msgstr "Teclado e mouse liberados. Clique na sessão para capturá-los de novo."
+
+msgid "Keyboard shortcuts"
+msgstr "Atalhos de teclado"
+
+msgid "Leave fullscreen"
+msgstr "Sair da tela cheia"
+
+msgid "List"
+msgstr "Lista"
+
+msgid "Maximize"
+msgstr "Maximizar"
+
+msgid "Minimize"
+msgstr "Minimizar"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"
+
+msgid "name.domain.local or 192.168.0.10"
+msgstr "nome.dominio.local ou 192.168.0.10"
+
+msgid "{n} connections"
+msgstr "{n} conexões"
+
+msgid "Next time, Beam shows the fingerprint again for you to confirm."
+msgstr "Na próxima vez, o Beam mostra a impressão digital de novo para você confirmar."
+
+msgid "No connection matches “{query}”."
+msgstr "Nenhuma conexão corresponde a “{query}”."
+
+msgid "Nothing found"
+msgstr "Nada encontrado"
+
+msgid "now"
+msgstr "agora"
+
+msgid "{n} servers"
+msgstr "{n} servidores"
+
+msgid "{n} sessions open"
+msgstr "{n} sessões abertas"
+
+msgid "Passwords never go to a file"
+msgstr "As senhas nunca vão para um arquivo"
+
+msgid "Previous fingerprint"
+msgstr "Impressão anterior"
+
+msgid "releases"
+msgstr "libera"
+
+msgid "Remote desktop client (RDP) for the Lyra OS ecosystem."
+msgstr "Cliente de área de trabalho remota (RDP) do ecossistema Lyra OS."
+
+msgid "Remove trust?"
+msgstr "Remover a confiança?"
+
+msgid "Search"
+msgstr "Buscar"
+
+msgid "Search connections"
+msgstr "Buscar conexões"
+
+msgid "Search connections or actions…"
+msgstr "Buscar conexões ou ações…"
+
+msgid "Show navigation"
+msgstr "Mostrar navegação"
+
+msgid "Show password"
+msgstr "Mostrar senha"
+
+msgid "Show session"
+msgstr "Mostrar sessão"
+
+msgid "Some connection values are out of range."
+msgstr "Alguns valores da conexão estão fora dos limites."
+
+msgid "System keyring"
+msgstr "Chaveiro do sistema"
+
+msgid "The certificate of {address} changed since the last connection. Someone may be impersonating the server. Only continue if the administrator confirms the change."
+msgstr "O certificado de {address} mudou desde a última conexão. Alguém pode estar se passando pelo servidor. Só continue se o administrador confirmar a troca."
+
+msgid "The connection to {host} could not be completed."
+msgstr "Não foi possível concluir a conexão com {host}."
+
+msgid "The password is asked when connecting and can be kept in the system keyring. It is never written to a file."
+msgstr "A senha é pedida ao conectar e pode ficar guardada no chaveiro do sistema. Ela nunca é gravada em arquivo."
+
+msgid "The password saved in the keyring is deleted too, unless another connection uses the same user and server."
+msgstr "A senha salva no chaveiro também é apagada, a menos que outra conexão use o mesmo usuário e servidor."
+
+msgid "The port goes from 1 to 65535."
+msgstr "A porta vai de 1 a 65535."
+
+msgid "The server's trusted certificate is kept."
+msgstr "O certificado confiável do servidor é mantido."
+
+msgid "The session with {host} was interrupted. Whatever was open on the remote computer is still there."
+msgstr "A sessão com {host} foi interrompida. O que estava aberto no computador remoto continua lá."
+
+msgid "This is the first connection to {address}. Confirm with the server administrator that this fingerprint is the same:"
+msgstr "É a primeira conexão a {address}. Confirme com o administrador do servidor que esta impressão digital é a mesma:"
+
+msgid "To confirm, type {text}:"
+msgstr "Para confirmar, digite {text}:"
+
+msgid "Today"
+msgstr "Hoje"
+
+msgid "Trust removed."
+msgstr "Confiança removida."
+
+msgid "Type {text} to confirm"
+msgstr "Digite {text} para confirmar"
+
+msgid "Yesterday"
+msgstr "Ontem"

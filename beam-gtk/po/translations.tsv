@@ -61,3 +61,74 @@ Failed to send data	Falha ao enviar dados	Error al enviar datos	发送数据失�
 Server certificate rejected by the user	Certificado do servidor recusado pelo usuário	Certificado del servidor rechazado por el usuario	用户拒绝了服务器证书
 Connection cancelled by the user	Conexão cancelada pelo usuário	Conexión cancelada por el usuario	用户取消了连接
 Network error: {detail}	Erro de rede: {detail}	Error de red: {detail}	网络错误：{detail}
+Actions	Ações	Acciones	操作
+{bits} bits	{bits} bits	{bits} bits	{bits} 位
+Cancel connection	Cancelar conexão	Cancelar la conexión	取消连接
+Certificate fingerprint (SHA-256)	Impressão digital do certificado (SHA-256)	Huella digital del certificado (SHA-256)	证书指纹（SHA-256）
+Close dialog	Fechar diálogo	Cerrar el diálogo	关闭对话框
+Connected	Conectado	Conectado	已连接
+Connected. Ctrl+Alt+F12 releases the keyboard and mouse.	Conectado. Ctrl+Alt+F12 libera o teclado e o mouse.	Conectado. Ctrl+Alt+F12 libera el teclado y el ratón.	已连接。按 Ctrl+Alt+F12 释放键盘和鼠标。
+Connecting…	Conectando…	Conectando…	正在连接…
+Connecting to {host}…	Conectando a {host}…	Conectando a {host}…	正在连接到 {host}…
+Connecting to {name}	Conectando a {name}	Conectando a {name}	正在连接到 {name}
+Connection created.	Conexão criada.	Conexión creada.	已创建连接。
+Connection deleted.	Conexão excluída.	Conexión eliminada.	已删除连接。
+Connection not found.	Conexão não encontrada.	No se encontró la conexión.	找不到连接。
+Connections	Conexões	Conexiones	连接
+Connection saved.	Conexão salva.	Conexión guardada.	已保存连接。
+Connect to the selected connection	Conectar à conexão selecionada	Conectar a la conexión seleccionada	连接到所选连接
+Continue	Continuar	Continuar	继续
+Could not connect	Não foi possível conectar	No se pudo conectar	无法连接
+Could not load connections	Não foi possível carregar as conexões	No se pudieron cargar las conexiones	无法加载连接
+Ctrl+Alt+Del	Ctrl+Alt+Del	Ctrl+Alt+Supr	Ctrl+Alt+Del
+Current fingerprint	Impressão atual	Huella actual	当前指纹
+{days} d {hours} h	{days} d {hours} h	{days} d {hours} h	{days} 天 {hours} 小时
+Delete the connection?	Excluir a conexão?	¿Eliminar la conexión?	要删除此连接吗？
+Delete the selected connection	Excluir a conexão selecionada	Eliminar la conexión seleccionada	删除所选连接
+Edit the selected connection	Editar a conexão selecionada	Editar la conexión seleccionada	编辑所选连接
+Fill in the connection name and the server.	Preencha o nome da conexão e o servidor.	Completa el nombre de la conexión y el servidor.	请填写连接名称和服务器。
+Grid	Grade	Cuadrícula	网格
+{hours} h {minutes} min	{hours} h {minutes} min	{hours} h {minutes} min	{hours} 小时 {minutes} 分钟
+In a session: release keyboard and mouse, leave fullscreen	Na sessão: liberar teclado e mouse e sair da tela cheia	En una sesión: liberar teclado y ratón y salir de pantalla completa	会话中：释放键盘和鼠标并退出全屏
+Keyboard and mouse captured	Teclado e mouse capturados	Teclado y ratón capturados	键盘和鼠标已捕获
+Keyboard and mouse released. Click the session to capture them again.	Teclado e mouse liberados. Clique na sessão para capturá-los de novo.	Teclado y ratón liberados. Haz clic en la sesión para capturarlos de nuevo.	键盘和鼠标已释放。点击会话可再次捕获。
+Keyboard shortcuts	Atalhos de teclado	Atajos de teclado	键盘快捷键
+Leave fullscreen	Sair da tela cheia	Salir de pantalla completa	退出全屏
+List	Lista	Lista	列表
+Maximize	Maximizar	Maximizar	最大化
+Minimize	Minimizar	Minimizar	最小化
+{minutes} min	{minutes} min	{minutes} min	{minutes} 分钟
+name.domain.local or 192.168.0.10	nome.dominio.local ou 192.168.0.10	nombre.dominio.local o 192.168.0.10	name.domain.local 或 192.168.0.10
+{n} connections	{n} conexões	{n} conexiones	{n} 个连接
+Next time, Beam shows the fingerprint again for you to confirm.	Na próxima vez, o Beam mostra a impressão digital de novo para você confirmar.	La próxima vez, Beam volverá a mostrar la huella digital para que la confirmes.	下次连接时，Beam 会再次显示指纹供您确认。
+No connection matches “{query}”.	Nenhuma conexão corresponde a “{query}”.	Ninguna conexión coincide con «{query}».	没有与“{query}”匹配的连接。
+Nothing found	Nada encontrado	No se encontró nada	未找到结果
+now	agora	ahora	刚刚
+{n} servers	{n} servidores	{n} servidores	{n} 台服务器
+{n} sessions open	{n} sessões abertas	{n} sesiones abiertas	{n} 个会话已打开
+Passwords never go to a file	As senhas nunca vão para um arquivo	Las contraseñas nunca se guardan en un archivo	密码绝不会写入文件
+Previous fingerprint	Impressão anterior	Huella anterior	之前的指纹
+releases	libera	libera	释放
+Remote desktop client (RDP) for the Lyra OS ecosystem.	Cliente de área de trabalho remota (RDP) do ecossistema Lyra OS.	Cliente de escritorio remoto (RDP) del ecosistema Lyra OS.	Lyra OS 生态的远程桌面客户端（RDP）。
+Remove trust?	Remover a confiança?	¿Quitar la confianza?	要移除信任吗？
+Search	Buscar	Buscar	搜索
+Search connections	Buscar conexões	Buscar conexiones	搜索连接
+Search connections or actions…	Buscar conexões ou ações…	Buscar conexiones o acciones…	搜索连接或操作…
+Show navigation	Mostrar navegação	Mostrar navegación	显示导航
+Show password	Mostrar senha	Mostrar contraseña	显示密码
+Show session	Mostrar sessão	Mostrar sesión	显示会话
+Some connection values are out of range.	Alguns valores da conexão estão fora dos limites.	Algunos valores de la conexión están fuera de rango.	部分连接参数超出范围。
+System keyring	Chaveiro do sistema	Llavero del sistema	系统密钥环
+The certificate of {address} changed since the last connection. Someone may be impersonating the server. Only continue if the administrator confirms the change.	O certificado de {address} mudou desde a última conexão. Alguém pode estar se passando pelo servidor. Só continue se o administrador confirmar a troca.	El certificado de {address} cambió desde la última conexión. Alguien podría estar suplantando al servidor. Continúa solo si el administrador confirma el cambio.	自上次连接以来，{address} 的证书已更改。可能有人在冒充该服务器。只有在管理员确认更换后才应继续。
+The connection to {host} could not be completed.	Não foi possível concluir a conexão com {host}.	No se pudo completar la conexión con {host}.	无法完成与 {host} 的连接。
+The password is asked when connecting and can be kept in the system keyring. It is never written to a file.	A senha é pedida ao conectar e pode ficar guardada no chaveiro do sistema. Ela nunca é gravada em arquivo.	La contraseña se pide al conectar y puede guardarse en el llavero del sistema. Nunca se escribe en un archivo.	连接时会询问密码，并可保存在系统密钥环中。密码绝不会写入文件。
+The password saved in the keyring is deleted too, unless another connection uses the same user and server.	A senha salva no chaveiro também é apagada, a menos que outra conexão use o mesmo usuário e servidor.	La contraseña guardada en el llavero también se elimina, salvo que otra conexión use el mismo usuario y servidor.	保存在密钥环中的密码也会被删除，除非其他连接使用相同的用户和服务器。
+The port goes from 1 to 65535.	A porta vai de 1 a 65535.	El puerto va de 1 a 65535.	端口范围为 1 到 65535。
+The server's trusted certificate is kept.	O certificado confiável do servidor é mantido.	Se conserva el certificado de confianza del servidor.	服务器的受信任证书会保留。
+The session with {host} was interrupted. Whatever was open on the remote computer is still there.	A sessão com {host} foi interrompida. O que estava aberto no computador remoto continua lá.	La sesión con {host} se interrumpió. Lo que estaba abierto en el equipo remoto sigue allí.	与 {host} 的会话已中断。远程计算机上打开的内容仍然保留。
+This is the first connection to {address}. Confirm with the server administrator that this fingerprint is the same:	É a primeira conexão a {address}. Confirme com o administrador do servidor que esta impressão digital é a mesma:	Es la primera conexión a {address}. Confirma con el administrador del servidor que esta huella digital es la misma:	这是首次连接到 {address}。请向服务器管理员确认此指纹一致：
+To confirm, type {text}:	Para confirmar, digite {text}:	Para confirmar, escribe {text}:	要确认，请输入 {text}：
+Today	Hoje	Hoy	今天
+Trust removed.	Confiança removida.	Confianza quitada.	已移除信任。
+Type {text} to confirm	Digite {text} para confirmar	Escribe {text} para confirmar	输入 {text} 以确认
+Yesterday	Ontem	Ayer	昨天

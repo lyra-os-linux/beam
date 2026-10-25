@@ -36,4 +36,5 @@ fn main() {
             .expect("run msgfmt");
         assert!(status.success(), "failed to compile {}", source.display());
     }
+    tauri_build::build();
 }

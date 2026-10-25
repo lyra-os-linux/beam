@@ -1,8 +1,9 @@
+use std::collections::HashMap;
+use std::sync::OnceLock;
+
 use gettextrs::{LocaleCategory, TextDomain};
-use gtk::gio;
-use gtk::gio::prelude::DBusProxyExt;
-use gtk::glib;
-use gtk::glib::variant::ToVariant;
+use gio::prelude::DBusProxyExt;
+use glib::variant::ToVariant;
 
 const DOMAIN: &str = "beam";
 const DEFAULT_LOCALE: &str = "en_US";
@@ -12,7 +13,15 @@ pub fn init() {
     init_locale(session_locale());
 }
 
-fn init_locale(locale: &str) {
+static ACTIVE: OnceLock<&'static str> = OnceLock::new();
+
+/// Locale escolhido em `init` (en_US, pt_BR, es_ES ou zh_CN).
+pub fn active_locale() -> &'static str {
+    ACTIVE.get().copied().unwrap_or(DEFAULT_LOCALE)
+}
+
+fn init_locale(locale: &'static str) {
+    let _ = ACTIVE.set(locale);
     // SAFETY: main calls this once, before GTK and the Tokio worker are created.
     unsafe {
         // A portable LC_ALL injected by launchers would otherwise force GNU
@@ -119,12 +128,60 @@ fn normalize_locale(value: &str) -> &'static str {
     }
 }
 
-pub fn gettext(message: &str) -> String {
-    gettextrs::gettext(message)
+/// O catálogo inteiro do locale ativo, para a interface web traduzir sem uma
+/// chamada por texto. Lê o mesmo `.mo` que o gettext usa no processo: o do
+/// checkout (como `init`) ou o instalado.
+#[tauri::command]
+pub fn i18n_catalog() -> HashMap<String, String> {
+    let relative = format!("{}/LC_MESSAGES/{DOMAIN}.mo", active_locale());
+    [
+        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/po/locale")).join(&relative),
+        std::path::Path::new("/usr/share/locale").join(&relative),
+    ]
+    .iter()
+    .find_map(|path| std::fs::read(path).ok())
+    .map(|bytes| parse_mo(&bytes))
+    .unwrap_or_default()
 }
 
-pub fn format1(message: &str, name: &str, value: &str) -> String {
-    gettext(message).replace(&format!("{{{name}}}"), value)
+/// Lê um catálogo GNU `.mo` (só a forma singular; a interface não usa plurais).
+fn parse_mo(bytes: &[u8]) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    let big = match bytes.get(0..4) {
+        Some([0xde, 0x12, 0x04, 0x95]) => false,
+        Some([0x95, 0x04, 0x12, 0xde]) => true,
+        _ => return map,
+    };
+    let word = |offset: usize| -> Option<u32> {
+        let raw: [u8; 4] = bytes.get(offset..offset + 4)?.try_into().ok()?;
+        Some(if big {
+            u32::from_be_bytes(raw)
+        } else {
+            u32::from_le_bytes(raw)
+        })
+    };
+    let (Some(count), Some(originals), Some(translations)) = (word(8), word(12), word(16)) else {
+        return map;
+    };
+    let string = |table: u32, index: u32| -> Option<String> {
+        let entry = table as usize + index as usize * 8;
+        let length = word(entry)? as usize;
+        let offset = word(entry + 4)? as usize;
+        let raw = bytes.get(offset..offset + length)?;
+        String::from_utf8(raw.split(|&b| b == 0).next()?.to_vec()).ok()
+    };
+    for index in 0..count {
+        if let (Some(key), Some(value)) = (string(originals, index), string(translations, index)) {
+            if !key.is_empty() && !value.is_empty() {
+                map.insert(key, value);
+            }
+        }
+    }
+    map
+}
+
+pub fn gettext(message: &str) -> String {
+    gettextrs::gettext(message)
 }
 
 #[cfg(test)]
@@ -178,6 +235,18 @@ mod tests {
         };
         init();
         assert_eq!(gettext("Settings"), expected);
+    }
+
+    #[test]
+    fn web_catalog_matches_the_compiled_translation() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let bytes = std::fs::read(root.join("po/locale/pt_BR/LC_MESSAGES/beam.mo")).unwrap();
+        let catalog = parse_mo(&bytes);
+        assert_eq!(
+            catalog.get("Settings").map(String::as_str),
+            Some("Configurações")
+        );
+        assert!(parse_mo(b"not a catalog").is_empty());
     }
 
     #[test]

@@ -81,6 +81,35 @@ impl Framebuffer {
         (inner.width, inner.height, inner.data.clone())
     }
 
+    /// Copy `rect` (clipped to the buffer) as tightly packed RGBA, the layout a web canvas
+    /// expects. Returns the clipped rectangle with its pixels, or `None` when it is empty.
+    pub fn copy_region_rgba(&self, rect: DirtyRect) -> Option<(DirtyRect, Vec<u8>)> {
+        let inner = self.inner.lock().expect("framebuffer mutex poisoned");
+        let right = (u32::from(rect.x) + u32::from(rect.width)).min(u32::from(inner.width));
+        let bottom = (u32::from(rect.y) + u32::from(rect.height)).min(u32::from(inner.height));
+        if right <= u32::from(rect.x) || bottom <= u32::from(rect.y) {
+            return None;
+        }
+        let clipped = DirtyRect {
+            x: rect.x,
+            y: rect.y,
+            width: (right - u32::from(rect.x)) as u16,
+            height: (bottom - u32::from(rect.y)) as u16,
+        };
+        let stride = usize::from(inner.width) * 4;
+        let mut out =
+            Vec::with_capacity(usize::from(clipped.width) * usize::from(clipped.height) * 4);
+        for row in usize::from(clipped.y)..bottom as usize {
+            let start = row * stride + usize::from(clipped.x) * 4;
+            let end = start + usize::from(clipped.width) * 4;
+            for offset in (start..end).step_by(4) {
+                let pixel = &inner.data[offset..offset + 4];
+                out.extend_from_slice(&[pixel[2], pixel[1], pixel[0], 255]);
+            }
+        }
+        Some((clipped, out))
+    }
+
     /// Return cheap render metadata, allowing frontends to reuse an existing texture.
     pub fn metadata(&self) -> (u16, u16, u64) {
         let inner = self.inner.lock().expect("framebuffer mutex poisoned");
@@ -91,6 +120,55 @@ impl Framebuffer {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn copy_region_rgba_swaps_channels_and_clips_to_the_buffer() {
+        let fb = Framebuffer::new(3, 2);
+        // BGRA source: pixel (x, y) = [b=x, g=y, r=9, a=0].
+        let mut src = Vec::new();
+        for y in 0..2u8 {
+            for x in 0..3u8 {
+                src.extend_from_slice(&[x, y, 9, 0]);
+            }
+        }
+        fb.update_region(
+            &src,
+            3,
+            2,
+            DirtyRect {
+                x: 0,
+                y: 0,
+                width: 3,
+                height: 2,
+            },
+        );
+        let (rect, rgba) = fb
+            .copy_region_rgba(DirtyRect {
+                x: 1,
+                y: 1,
+                width: 10,
+                height: 10,
+            })
+            .unwrap();
+        assert_eq!(
+            rect,
+            DirtyRect {
+                x: 1,
+                y: 1,
+                width: 2,
+                height: 1
+            }
+        );
+        assert_eq!(rgba, vec![9, 1, 1, 255, 9, 1, 2, 255]);
+        assert!(fb
+            .copy_region_rgba(DirtyRect {
+                x: 3,
+                y: 0,
+                width: 1,
+                height: 1
+            })
+            .is_none());
+    }
 
     #[test]
     fn update_region_only_copies_dirty_pixels() {

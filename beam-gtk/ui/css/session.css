@@ -1,0 +1,53 @@
+/* Beam — janela de sessão: barra mínima e a área remota em destaque. */
+
+[hidden] { display: none !important; }
+body.session { display: grid; grid-template-rows: auto 1fr; height: 100vh; background: #141417; color: #fafafb; }
+body.session.fullscreen { grid-template-rows: 0 1fr; }
+body.session.fullscreen .session-bar { position: fixed; top: 0; left: 50%; transform: translate(-50%, -100%); width: auto; border-radius: 0 0 14px 14px; transition: transform 0.25s var(--ease); z-index: 10; box-shadow: var(--shadow-pop); }
+body.session.fullscreen .session-bar.peek { transform: translate(-50%, 0); }
+body.session.fullscreen .window-controls { display: none; }
+
+.session-bar {
+  height: 46px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px;
+  background: #222226; border-bottom: 1px solid rgb(255 255 255 / 0.07);
+}
+.session-title { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.session-title strong { font-size: 14px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.session-title small { display: block; font-size: 12px; color: rgb(250 250 251 / 0.55); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-dot.connecting { background: var(--yellow); box-shadow: 0 0 0 3px var(--yellow-bg); animation: pulse 1.2s ease-in-out infinite; }
+.status-dot.lost { background: var(--red); box-shadow: 0 0 0 3px var(--red-bg); }
+@keyframes pulse { 50% { opacity: 0.35; } }
+.session-actions { display: flex; align-items: center; gap: 4px; }
+.session-actions .btn { height: 30px; }
+.session-actions .btn.danger-soft { background: rgb(255 123 99 / 0.14); color: #ff7b63; }
+.capture-hint { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 999px; background: rgb(255 255 255 / 0.08); font-size: 12.5px; color: rgb(250 250 251 / 0.8); white-space: nowrap; }
+.capture-hint kbd { background: rgb(255 255 255 / 0.12); color: #fff; border-bottom-color: rgb(255 255 255 / 0.2); }
+
+.stage { position: relative; display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at center, #1c1c21 0%, #0f0f12 100%); }
+.remote { display: block; max-width: 100%; max-height: 100%; box-shadow: 0 18px 60px -20px rgb(0 0 0 / 0.8); cursor: default; image-rendering: auto; transition: filter 0.3s, opacity 0.3s; }
+.remote.blur { filter: blur(6px) saturate(0.6); opacity: 0.55; }
+.remote:focus { outline: none; }
+.notice { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 12px; background: #2b2b31; color: #fafafb; box-shadow: var(--shadow-pop); font-size: 13.5px; max-width: calc(100% - 32px); }
+.keyring-row { margin-top: 14px; justify-content: space-between; text-align: left; }
+
+/* Conectando / conexão perdida */
+.connecting { position: absolute; inset: 0; display: grid; place-items: center; }
+.connect-card p.row-flex { margin-top: 6px; gap: 10px; }
+.connect-card { width: min(420px, calc(100% - 32px)); padding: 26px 26px 22px; border-radius: 16px; background: #26262b; box-shadow: var(--shadow-pop); color: #fafafb; }
+.connect-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.connect-card p { color: rgb(250 250 251 / 0.65); font-size: 13.5px; }
+.steps { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; }
+.steps li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: rgb(250 250 251 / 0.5); }
+.steps li .mark { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: rgb(255 255 255 / 0.08); flex: none; }
+.steps li.done { color: rgb(250 250 251 / 0.85); }
+.steps li.done .mark { background: rgb(87 227 137 / 0.18); color: #57e389; }
+.steps li.now { color: #fff; font-weight: 600; }
+.steps li.now .mark { background: transparent; }
+.connect-card .row-flex { margin-top: 20px; justify-content: flex-end; }
+.lost-card .d-ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgb(255 123 99 / 0.14); color: #ff7b63; margin-bottom: 12px; }
+.lost-card .detail { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgb(255 255 255 / 0.06); font-family: var(--mono); font-size: 12.5px; color: rgb(250 250 251 / 0.75); }
+
+.session-title .status-dot { flex: none; }
+.session-actions, .window-controls { flex: none; }
+@media (max-width: 1240px) { .capture-hint .label { display: none; } }
+@media (max-width: 900px) { .capture-hint { display: none; } .session-actions .btn .lbl { display: none; } }
