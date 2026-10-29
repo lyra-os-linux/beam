@@ -416,7 +416,7 @@ checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
 name = "beam-core"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "bytes",
  "directories",
@@ -444,7 +444,7 @@ dependencies = [
 
 [[package]]
 name = "beam-gtk"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "base64 0.22.1",
  "beam-core",
