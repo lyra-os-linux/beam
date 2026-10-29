@@ -60,6 +60,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.1.1" date="2026-10-29">
+      <description>
+        <p>Stop the web content process from crashing when Beam closes.</p>
+      </description>
+    </release>
     <release version="1.1.0" date="2026-10-25">
       <description>
         <p>New interface in the style of the Lyra OS apps: connection cards with search, a dedicated page for trusted certificates, and session windows with a minimal bar, connection progress and reconnect.</p>

@@ -10,7 +10,7 @@
 #
 
 Name:           beam
-Version:        1.1.0
+Version:        1.1.1
 Release:        0
 Summary:        Cliente RDP do ecossistema Lyra OS
 License:        GPL-3.0-or-later
