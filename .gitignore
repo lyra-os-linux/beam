@@ -1,3 +1,7 @@
 /target
 beam-gtk/po/locale/
 /beam-gtk/gen/
+
+# Chaves e certificados do xrdp (nunca versionar; beam#11)
+rsakeys.ini
+*.pem
